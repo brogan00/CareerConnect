@@ -1,0 +1,270 @@
+/* GENERAL */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap");
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Inter", sans-serif;
+  background-color: #f4f7fc;
+  color: #333;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+p {
+  color: #333;
+  font-size: 1.1rem;
+  line-height: 1.8;
+  opacity: 0; /* Caché initialement */
+  transform: translateY(20px);
+  animation: fadeInUp 1.5s ease-in-out forwards 0.5s; /* Animation avec délai */
+}
+
+/* NAVIGATION */
+nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 10%;
+  background: #0056b3;
+  color: white;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+}
+
+.logo-container img {
+  margin-right: 10px;
+}
+
+.logo {
+  font-size: 2rem;
+  font-weight: bold;
+  color: white;
+}
+
+.nav-links {
+  display: flex;
+  gap: 25px;
+  list-style: none;
+}
+
+.nav-links li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nav-links a {
+  text-decoration: none;
+  color: white;
+  font-size: 1.2rem;
+  font-weight: 500;
+  transition: color 0.3s ease-in-out;
+}
+
+.nav-links a:hover {
+  color: #ffcc00;
+}
+
+.sign-in-btn {
+  background-color: #ffcc00;
+  color: #0056b3;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+}
+
+.sign-in-btn:hover {
+  background-color: white;
+  color: #0056b3;
+}
+
+/* INTRO SECTION */
+.intro-container {
+  text-align: center;
+  margin: 50px auto;
+  max-width: 800px;
+  padding: 20px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  animation: fadeIn 1.5s ease-in-out;
+}
+
+h1 {
+  color: #0056b3;
+  font-size: 2.5rem;
+}
+
+/* Animation du paragraphe */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Animation de la section */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Import Google Font */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap");
+
+/* Reset Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Inter", sans-serif;
+}
+
+/* Background Radial Gradient */
+.background-radial-gradient {
+  background-color: hsl(218, 41%, 15%);
+  background-image: radial-gradient(650px circle at 0% 0%,
+      hsl(218, 41%, 35%) 15%,
+      hsl(218, 41%, 30%) 35%,
+      hsl(218, 41%, 20%) 75%,
+      hsl(218, 41%, 19%) 80%,
+      transparent 100%),
+    radial-gradient(1250px circle at 100% 100%,
+      hsl(218, 41%, 45%) 15%,
+      hsl(218, 41%, 30%) 35%,
+      hsl(218, 41%, 20%) 75%,
+      hsl(218, 41%, 19%) 80%,
+      transparent 100%);
+}
+
+/* Glassmorphism Card */
+.bg-glass {
+  background-color: hsla(0, 0%, 100%, 0.9) !important;
+  backdrop-filter: saturate(200%) blur(25px);
+  border-radius: 10px;
+}
+
+/* Custom Shapes */
+#radius-shape-1 {
+  height: 220px;
+  width: 220px;
+  top: -60px;
+  left: -130px;
+  background: radial-gradient(#44006b, #ad1fff);
+  position: absolute;
+  border-radius: 50%;
+}
+
+#radius-shape-2 {
+  height: 300px;
+  width: 300px;
+  bottom: -60px;
+  right: -110px;
+  background: radial-gradient(#44006b, #ad1fff);
+  position: absolute;
+  border-radius: 38% 62% 63% 37% / 70% 33% 67% 30%;
+}
+
+/* Form Controls */
+.form-control {
+  border-radius: 5px;
+  border: 2px solid #ced4da;
+  transition: border-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+.form-control:focus {
+  border-color: #0056b3;
+  box-shadow: 0px 0px 5px rgba(0, 86, 179, 0.3);
+}
+
+/* Login Button */
+.btn-primary {
+  background-color: #0056b3;
+  border: none;
+  padding: 10px;
+  font-weight: bold;
+  border-radius: 5px;
+  transition: all 0.3s ease-in-out;
+}
+
+.btn-primary:hover {
+  background-color: #003d80;
+}
+
+/* Social Login Buttons */
+.btn-link {
+  color: #0056b3;
+}
+
+.btn-link:hover {
+  color: #003d80;
+}
+
+.background-radial-gradient {
+  background-color: hsl(218, 41%, 15%);
+  background-image: radial-gradient(650px circle at 0% 0%,
+      hsl(218, 41%, 35%) 15%,
+      hsl(218, 41%, 30%) 35%,
+      hsl(218, 41%, 20%) 75%,
+      hsl(218, 41%, 19%) 80%,
+      transparent 100%),
+    radial-gradient(1250px circle at 100% 100%,
+      hsl(218, 41%, 45%) 15%,
+      hsl(218, 41%, 30%) 35%,
+      hsl(218, 41%, 20%) 75%,
+      hsl(218, 41%, 19%) 80%,
+      transparent 100%);
+}
+
+#radius-shape-1 {
+  height: 220px;
+  width: 220px;
+  top: -60px;
+  left: -130px;
+  background: radial-gradient(#44006b, #ad1fff);
+  overflow: hidden;
+}
+
+#radius-shape-2 {
+  border-radius: 38% 62% 63% 37% / 70% 33% 67% 30%;
+  bottom: -60px;
+  right: -110px;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(#44006b, #ad1fff);
+  overflow: hidden;
+}
+
+.bg-glass {
+  background-color: hsla(0, 0%, 100%, 0.9) !important;
+  backdrop-filter: saturate(200%) blur(25px);
+}
+

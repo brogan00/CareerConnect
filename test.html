@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CareerConnect</title>
+    <link rel="stylesheet" href="assets/CSS/bootstrap.min.css" />
+    <link rel="stylesheet" href="assets/CSS/style.css" />
+    <link rel="icon" type="image/png" href="cv.png" />
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top px-3">
+        <a class="navbar-brand fw-bold fs-2" href="index1.html">
+            <img src="htmlpfe.png" alt="Logo" width="50" class="me-2" />CareerConnect
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainmenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="mainmenu">
+            <ul class="navbar-nav mx-auto text-center">
+                <li class="nav-item"><a class="nav-link fs-5" href="#search-bar">🔎 Search Jobs</a></li>
+                <li class="nav-item"><a class="nav-link fs-5" href="#">🏢 Find Companies</a></li>
+                <li class="nav-item"><a class="nav-link fs-5" href="#">📌 Post a Job</a></li>
+            </ul>
+            <a class="btn btn-primary mx-2" href="connexion/Signup.html">Sign Up</a>
+            <a class="btn btn-outline-primary" href="connexion/Login.html">Login</a>
+        </div>
+    </nav>
+    
+    <!-- Hero Section -->
+    <header class="hero-section d-flex flex-column justify-content-center align-items-center text-center text-white min-vh-100 bg-primary">
+        <h1 class="fw-bold" data-aos="fade-down">Find Your Dream Job</h1>
+        <p class="fs-5" data-aos="fade-up">Connect with top companies and explore endless opportunities.</p>
+        <div class="d-flex gap-3 mt-4">
+            <a href="#search-bar" class="btn btn-light btn-lg">Search Jobs</a>
+            <a href="#" class="btn btn-outline-light btn-lg">Post a Job</a>
+        </div>
+    </header>
+    
+    <!-- Search Bar -->
+    <div id="search-bar" class="container py-5">
+        <div class="input-group w-75 mx-auto">
+            <input type="text" class="form-control" placeholder="Job title, keywords...">
+            <input type="text" class="form-control" placeholder="City, Wilaya...">
+            <button class="btn btn-primary">Search</button>
+        </div>
+    </div>
+    
+    <!-- Featured Jobs Section -->
+    <section class="container py-5">
+        <h2 class="text-center fw-bold">Featured Jobs</h2>
+        <div class="row mt-4">
+            <div class="col-md-4">
+                <div class="card shadow-sm p-3">
+                    <h5>Software Developer</h5>
+                    <p>XYZ Tech - Algiers</p>
+                    <a href="#" class="btn btn-outline-primary">Apply Now</a>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card shadow-sm p-3">
+                    <h5>Marketing Specialist</h5>
+                    <p>ABC Corp - Oran</p>
+                    <a href="#" class="btn btn-outline-primary">Apply Now</a>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card shadow-sm p-3">
+                    <h5>UI/UX Designer</h5>
+                    <p>DesignStudio - Constantine</p>
+                    <a href="#" class="btn btn-outline-primary">Apply Now</a>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>AOS.init();</script>
+    <script src="assets/JS/bootstrap.min.js"></script>
+</body>
+</html>

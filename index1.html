@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CareerConnect</title>
+    <link rel="stylesheet" href="assets/CSS/bootstrap.min.css" />
+    <link rel="stylesheet" href="">
+    <link rel="stylesheet" href="assets/CSS/style.css" />
+    <link rel="icon" type="image/png" href="cv.png" width="8" />
+  </head>
+
+  <body>
+    <div class="navbar navbar-expand-md fixed-top mx-3 ">
+      <!-- <div class="container-fluid mx-5"> -->
+        <div class="mt-2">
+          <a href="index1.html" class="navbar-brand justify-content-center">
+            <img class="mb-3" src="htmlpfe.png" alt="Logo" width="50" />
+            <span class="navbar-brand fw-bold fs-2">CareerConnect</span>
+          </a>
+        </div>
+
+        <button class="navbar-toggler ms-auto" type="button" data-bs-toggle="collapse" data-bs-target="#mainmenu">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        
+        <div class="navbar-collapse collapse mx-5 fw-bold" id="mainmenu">
+            <ul class="navbar-nav align-items-center justify-content-center text-center text-black">
+              <li class="nav-item ">
+                <a class="nav-link nav-links fs-5" href="">
+                  <img src="recherche.png" alt="Search" width="25" />
+                  search jobs
+                </a>
+              </li>
+              
+              <li class="nav-item ">
+                <a class="nav-link nav-links fs-5" href=""> 
+                  <img src="batiment.png" alt="Company" width="25" />
+                  find companies
+                </a>
+              </li>
+              
+              <li class="nav-item ">
+                <a class="nav-link nav-links fs-5" href="">
+                  <img src="poste-vacant.png" alt="Post" width="25" />
+                  post a job
+                </a>
+              </li>
+            </ul>
+        </div>
+                    
+        <div class="ms-auto">
+          <a class="btn sign-in-btn" href="connexion/Signup.html">sign Up</a>
+          <a class="btn sign-in-btn" href="connexion/Login.html">Login</a>
+        </div>
+        
+      
+    </div>
+    <div>
+<!-- Hero Section -->
+    <header class="hero-section d-flex flex-column justify-content-center align-items-center text-center min-vh-100 ">
+       <h1 class="fw-bold" data-aos="fade-down">Find Your Dream Job</h1>
+       <p class="fs-5" data-aos="fade-up">Connect with top companies and explore endless opportunities.</p>
+       <div class="d-flex gap-3 mt-4">
+      <a href="#search-bar" class="btn btn-light btn-lg">Search Jobs</a>
+      <a href="#" class="btn btn-light btn-lg">Post a Job</a>
+  </div>
+</header>
+    
+    <div>
+    <div  id="search-bar" class="d-flex justify-content-center align-items-center min-vh-100">
+      <div class="input-group w-75">
+        <img src="https://cdn-icons-png.flaticon.com/512/25/25694.png" class="icon" alt="Job Icon">
+          <input type="text" class="form-control" placeholder="Jobs" aria-label="Jobs">
+          <img src="https://cdn-icons-png.flaticon.com/512/535/535239.png" class="icon" alt="Location Icon">
+          <input type="text" class="form-control bi bi-geo-alt" placeholder="Ville or Wilaya" aria-label="Location">
+          <button class="btn btn-outline-secondary" type="submit">Rechercher</button>
+       </div>
+   </div>
+  </div>
+</div>
+     <script src="assets/JS/bootstrap.min.js"></script>
+   
+  </body>
+</html>

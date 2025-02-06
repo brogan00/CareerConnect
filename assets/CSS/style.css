@@ -1,0 +1,36 @@
+
+body {
+    font-family: "Poppins", sans-serif;
+  }
+.nav-links {
+    color: black;
+    list-style: none;
+    font-size: 1.5rem;
+}
+.nav-links:hover {
+    color: grey;
+    text-decoration: underline;
+    text-underline-offset: 1rem;
+    text-decoration-color: rgb(181, 181, 181);
+}
+.sign-in-btn {
+    background-color: #7a1bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 20px;
+    font-size: 16px;
+    font-weight: bold;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+  }
+  .sign-in-btn:hover {
+    color:white;
+    background-color: #7a1bff;
+    transform: scale(1.05);
+  }
+  .icon {
+    width: 28px;
+    height: 28px;
+    margin-right: 12px;
+  }
