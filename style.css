@@ -73,25 +73,30 @@ a:hover {
   align-items: center;
   justify-content: flex-start;
 }
+
 .logo-container img {
   margin-right: 5px;
 }
+
 .logo {
   font-size: 2rem;
   font-weight: bold;
 }
+
 .nav-links {
   display: flex;
   gap: 1.5rem;
   align-items: center;
   font-size: 1.2rem;
 }
+
 .nav-links li {
   display: flex;
   align-items: center;
   gap: 8px;
   list-style: none;
 }
+
 .sign-in-btn {
   background-color: #7a1bff;
   color: white;
@@ -103,10 +108,12 @@ a:hover {
   font-weight: bold;
   transition: background-color 0.3s ease, transform 0.2s ease;
 }
+
 .sign-in-btn:hover {
   background-color: #7a1bff;
   transform: scale(1.05);
 }
+
 body {
   font-family: Arial, sans-serif;
   display: flex;
@@ -116,15 +123,17 @@ body {
   background-color: #f9f9f9;
   margin: 0;
 }
+
 nav {
   width: 100%;
 
   padding: 15px 0;
   text-align: center;
-  
+
   font-size: 1.5em;
   font-weight: bold;
 }
+
 .search-container {
   display: flex;
   align-items: center;
@@ -139,9 +148,11 @@ nav {
   margin-top: auto;
   margin-bottom: auto;
 }
+
 .search-container:hover {
   transform: scale(1.05);
 }
+
 .search-container input {
   border: none;
   outline: none;
@@ -151,9 +162,11 @@ nav {
   margin-right: 12px;
   transition: background-color 0.3s ease-in-out;
 }
+
 .search-container input:focus {
   background-color: #eef6ff;
 }
+
 .search-container button {
   background-color: #7a1bff;
   color: white;
@@ -164,15 +177,18 @@ nav {
   font-size: 1.3em;
   transition: background-color 0.3s ease-in-out, transform 0.2s ease-in-out;
 }
+
 .search-container button:hover {
   background-color: #7a1bff;
   transform: scale(1.1);
 }
+
 .icon {
   width: 28px;
   height: 28px;
   margin-right: 12px;
 }
+
 .container {
   display: flex;
   flex-direction: column;
@@ -181,6 +197,7 @@ nav {
   flex-grow: 1;
   width: 100%;
 }
+
 /* MEDIA QUERIES */
 /* @media (max-width: 1024px) {
   nav {
@@ -259,6 +276,7 @@ h1 {
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -271,9 +289,9 @@ h1 {
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
-
