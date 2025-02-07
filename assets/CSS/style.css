@@ -15,6 +15,10 @@ body {
   text-decoration-color: rgb(181, 181, 181);
 }
 
+.scale:hover {
+  transform: scale(1.05);
+}
+
 .sign-in-btn {
   background-color: #7a1bff;
   color: white;
@@ -51,7 +55,7 @@ body {
 }
 
 .search-container:hover {
-  transform: scale(1.05);
+  transform: scale(1.02);
 }
 
 .search-container div input {
@@ -81,5 +85,5 @@ body {
 .search-button:hover {
   color: white;
   background-color: #7a1bff;
-  transform: scale(1.1);
+  transform: scale(1.05);
 }
