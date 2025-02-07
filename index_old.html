@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CareerConnect</title>
+  <link rel="stylesheet" href="assets/CSS/bootstrap.min.css">
+  <link rel="stylesheet" href="/shits/style.css" />
+  <link rel="stylesheet" href="/shits/mediaqueries.css" />
+
+  <link rel="icon" type="image/png" href="cv.png" width="8" />
+
+
+
+</head>
+
+<body>
+  <nav id="desktop-nav ">
+    <div class="logo-container">
+      <img src="htmlpfe.png" alt="Logo" width="50">
+      <div class="logo">CareerConnect</div>
+    </div>
+    <div>
+      <ul class="nav-links">
+        <li><img src="recherche.png" alt="Search" width="25"><a href=""> search jobs</a></li>
+        <li><img src="batiment.png" alt="Company" width="25"><a href=""> find companies</a></li>
+        <li><img src="poste-vacant.png" alt="Post" width="25"><a href=""> post a job</a></li>
+      </ul>
+    </div>
+    <div class="Sign">
+      <a href="connexion/Signup.html"><button class="sign-in-btn ">sign up</button></a>
+      <a href="connexion/Login.html"><button class="sign-in-btn ">Login</button></a>
+    </div>
+  </nav>
+
+
+
+
+  <div class="container">
+    <div class="intro-container">
+      <h1>Welcome to Career Connect</h1>
+      <p id="animated-paragraph"></p>
+    </div>
+
+
+    <div class="search-container row">
+      <img src="https://cdn-icons-png.flaticon.com/512/25/25694.png" class="col-1 col-md-3" alt="Job Icon">
+      <input class="col-4" type="text" placeholder="Intitulé du poste, mots-clés, entreprise">
+      <img src="https://cdn-icons-png.flaticon.com/512/535/535239.png" class="col-1" alt="Location Icon">
+      <input class="col-4" type="text" placeholder="Ville ou wilaya">
+      <button>Rechercher</button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
+    integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
+    crossorigin="anonymous"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"
+    integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy"
+    crossorigin="anonymous"></script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      let text = "Your gateway to endless job opportunities! Find your dream job, connect with top companies, and take your career to the next level. Start exploring today!";
+      let paragraph = document.getElementById("animated-paragraph");
+      let index = 0;
+
+      function typeWriter() {
+        if (index < text.length) {
+          paragraph.innerHTML += text.charAt(index);
+          index++;
+          setTimeout(typeWriter, 40); // Vitesse de l'animation
+        }
+      }
+
+      typeWriter();
+    });
+  </script>
+</body>
+
+</html>
