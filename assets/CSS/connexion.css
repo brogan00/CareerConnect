@@ -9,8 +9,8 @@
 
 body {
   font-family: "Inter", sans-serif;
-  background-color: #f4f7fc;
   color: #333;
+  min-height: 100dvh;
 }
 
 html {
@@ -134,35 +134,25 @@ h1 {
   }
 }
 
-/* Import Google Font */
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap");
-
-/* Reset Styles */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  font-family: "Inter", sans-serif;
-}
-
 /* Background Radial Gradient */
 .background-radial-gradient {
   background-color: hsl(218, 41%, 15%);
-  background-image: radial-gradient(650px circle at 0% 0%,
+  background-image: radial-gradient(
+      650px circle at 0% 0%,
       hsl(218, 41%, 35%) 15%,
       hsl(218, 41%, 30%) 35%,
       hsl(218, 41%, 20%) 75%,
       hsl(218, 41%, 19%) 80%,
-      transparent 100%),
-    radial-gradient(1250px circle at 100% 100%,
+      transparent 100%
+    ),
+    radial-gradient(
+      1250px circle at 100% 100%,
       hsl(218, 41%, 45%) 15%,
       hsl(218, 41%, 30%) 35%,
       hsl(218, 41%, 20%) 75%,
       hsl(218, 41%, 19%) 80%,
-      transparent 100%);
+      transparent 100%
+    );
 }
 
 /* Glassmorphism Card */
@@ -230,18 +220,24 @@ body {
 
 .background-radial-gradient {
   background-color: hsl(218, 41%, 15%);
-  background-image: radial-gradient(650px circle at 0% 0%,
+  background-image: radial-gradient(
+      650px circle at 0% 0%,
       hsl(218, 41%, 35%) 15%,
       hsl(218, 41%, 30%) 35%,
       hsl(218, 41%, 20%) 75%,
       hsl(218, 41%, 19%) 80%,
-      transparent 100%),
-    radial-gradient(1250px circle at 100% 100%,
+      transparent 100%
+    ),
+    radial-gradient(
+      1250px circle at 100% 100%,
       hsl(218, 41%, 45%) 15%,
       hsl(218, 41%, 30%) 35%,
       hsl(218, 41%, 20%) 75%,
       hsl(218, 41%, 19%) 80%,
-      transparent 100%);
+      transparent 100%
+    );
+
+  background-repeat: no-repeat;
 }
 
 #radius-shape-1 {
@@ -267,4 +263,3 @@ body {
   background-color: hsla(0, 0%, 100%, 0.9) !important;
   backdrop-filter: saturate(200%) blur(25px);
 }
-
