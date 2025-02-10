@@ -87,3 +87,15 @@ body {
   background-color: #7a1bff;
   transform: scale(1.05);
 }
+@keyframes fadeIn {
+  0% { opacity: 0; transform: translateY(-10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.animated-text {
+  font-size: 24px;
+  font-weight: bold;
+  color: #007bff;
+  opacity: 0;
+  animation: fadeIn 1.5s ease-out forwards;
+}
