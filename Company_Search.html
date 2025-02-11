@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Company Search - CareerConnect</title>
+  <link rel="stylesheet" href="assets/CSS/bootstrap.min.css" />
+   <link rel="stylesheet" href="assets/CSS/style.css" /> 
+  <link rel="icon" type="image/png" href="/assets/icons/tab_logo.png" width="8" />
+</head>
+
+<body>
+  <!-- Navbar (Same as Home Page) -->
+  <div class="navbar navbar-expand-lg px-3 ">
+    <div class="mt-2">
+      <a href="index_old.html" class="navbar-brand justify-content-center">
+        <img class="mb-3" src="/assets/images/logo.png" alt="Logo" width="50" />
+        <span class="navbar-brand fw-bold fs-2">CareerConnect</span>
+      </a>
+    </div>
+
+    <button class="navbar-toggler ms-auto" type="button" data-bs-toggle="collapse" data-bs-target="#mainmenu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="navbar-collapse collapse px-4 fw-bold" id="mainmenu">
+      <ul class="navbar-nav align-items-center justify-content-center text-center text-black">
+        <li class="nav-item ">
+          <a class="nav-link nav-links scale fs-5" href="Job Search.html">
+            <img src="assets/icons/recherche.png" alt="Search" width="25" />
+            search jobs
+          </a>
+        </li>
+
+        <li class="nav-item ">
+          <a class="nav-link nav-links scale fs-5" href="Company Search.html">
+            <img src="assets/icons/batiment.png" alt="Company" width="25" />
+            find companies
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link nav-links scale fs-5" href="Post a Job.html">
+            <img src="assets/icons/poste-vacant.png" alt="Post" width="25" />
+            post a job
+          </a>
+        </li>
+      </ul>
+      <div class="d-flex ms-auto nav-item justify-content-center d-block mt-2 mt-lg-0">
+        <li class="nav-link me-1">
+          <a class="btn sign-in-btn" href="connexion/Signup.html">Sign Up</a>
+        </li>
+        <li class="nav-link me-1">
+          <a class="btn sign-in-btn" href="connexion/Login.html">Login</a>
+        </li>
+      </div>
+    </div>
+  </div>
+
+  <div class="container mt-5">
+    <h2 class="text-center mb-4">Find Companies</h2>
+    <div class="container search-container mt-5 w-75">
+      <div class="row align-items-center justify-content-center">
+        <div class="col-10 col-md-8 col-lg-6">
+          <img src="assets/icons/batiment.png" class="col-1" alt="Company Icon">
+          <input class="col-10" type="text" placeholder="Search for companies...">
+        </div>
+        <div class="btn search-button col-10 col-md-4 col-lg-3 mt-md-2 mt-sm-2">Search</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Example Companies -->
+  <div class="container mt-5">
+    <h3 class="text-center mb-4">Featured Companies</h3>
+    <div class="row">
+      <!-- Company 1 -->
+      <div class="col-md-4 mb-4">
+        <div class="card company-card">
+          <div class="card-body text-center">
+            <img src="https://via.placeholder.com/100" alt="TechCorp Logo" class="mb-3">
+            <h5 class="card-title">TechCorp</h5>
+            <p class="card-text">Industry: Technology</p>
+            <p class="card-text">Location: San Francisco, CA</p>
+            <a href="#" class="btn btn-primary">View Jobs</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Company 2 -->
+      <div class="col-md-4 mb-4">
+        <div class="card company-card">
+          <div class="card-body text-center">
+            <img src="https://via.placeholder.com/100" alt="DataWorks Logo" class="mb-3">
+            <h5 class="card-title">DataWorks</h5>
+            <p class="card-text">Industry: Data Analytics</p>
+            <p class="card-text">Location: New York, NY</p>
+            <a href="#" class="btn btn-primary">View Jobs</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Company 3 -->
+      <div class="col-md-4 mb-4">
+        <div class="card company-card">
+          <div class="card-body text-center">
+            <img src="https://via.placeholder.com/100" alt="GreenEnergy Logo" class="mb-3">
+            <h5 class="card-title">GreenEnergy</h5>
+            <p class="card-text">Industry: Renewable Energy</p>
+            <p class="card-text">Location: Austin, TX</p>
+            <a href="#" class="btn btn-primary">View Jobs</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/JS/bootstrap.min.js"></script>
+</body>
+
+</html>
+<style>
+    /* Company Search Bar */
+.search-container {
+  display: flex;
+  border: 3px solid #7a1bff;
+  border-radius: 15px;
+  padding: 25px;
+  background-color: #fff;
+  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+  box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.search-container:hover {
+  transform: scale(1.02);
+}
+
+.search-container div input {
+  border: none;
+  outline: none;
+  padding: 18px;
+  font-size: 1.3em;
+  flex: 1;
+  margin-right: 12px;
+  transition: background-color 0.3s ease-in-out;
+}
+
+.search-button {
+  background-color: #7a1bff;
+  color: white;
+  border: none;
+  padding: 18px 10px;
+  cursor: pointer;
+  border-radius: 8px;
+  font-size: 1.3em;
+  transition: background-color 0.3s ease-in-out, transform 0.2s ease-in-out;
+}
+
+.search-button:hover {
+  color: white;
+  background-color: #7a1bff;
+  transform: scale(1.05);
+}
+
+/* Company Cards */
+.company-card {
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+.company-card:hover {
+  transform: scale(1.05);
+  box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.company-card img {
+  border-radius: 50%;
+}
+</style>
