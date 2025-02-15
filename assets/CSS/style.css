@@ -261,3 +261,36 @@ animation-duration: 1s;
   background-color: #6a15e0;
   transform: scale(1.05);
 }
+.upload-cv-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.upload-cv-card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2) !important;
+}
+
+.upload-cv-button {
+  transition: transform 0.3s ease;
+}
+
+.upload-cv-button:hover {
+  transform: scale(1.05);
+}
+/* Optional: Add hover effects using CSS */
+.search-candidate-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.search-candidate-card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2) !important;
+}
+
+.search-candidate-button {
+  transition: transform 0.3s ease;
+}
+
+.search-candidate-button:hover {
+  transform: scale(1.05);
+}
