@@ -158,7 +158,6 @@ h1 {
 /* Glassmorphism Card */
 .bg-glass {
   background-color: hsla(0, 0%, 100%, 0.9) !important;
-  backdrop-filter: saturate(200%) blur(25px);
   border-radius: 10px;
 }
 
@@ -257,9 +256,4 @@ h1 {
   height: 300px;
   background: radial-gradient(#44006b, #ad1fff);
   overflow: hidden;
-}
-
-.bg-glass {
-  background-color: hsla(0, 0%, 100%, 0.9) !important;
-  backdrop-filter: saturate(200%) blur(25px);
 }
