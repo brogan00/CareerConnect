@@ -1,274 +1,379 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CareerConnect</title>
+    <link rel="stylesheet" href="assets/CSS/bootstrap.min.css" />
+    <link rel="stylesheet" href="assets/icons/all.min.css" />
+    <link rel="stylesheet" href="assets/CSS/style.css" />
+    <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"> -->
 
-<head>
-  <meta charset="UTF-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CareerConnect</title>
-  <link rel="stylesheet" href="assets/CSS/bootstrap.min.css" />
-  <link rel="stylesheet" href="assets/CSS/style.css" />
-  <link rel="stylesheet" href="/assets/icons/all.min.css">
-  <link rel="stylesheet" href="/assets/icons/all.min.js">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-  
-  <link rel="icon" type="image/png" href="./assets/images/hamidou.png" width="8" />
-</head>
+    <link
+      rel="icon"
+      type="image/png"
+      href="./assets/images/hamidou.png"
+      width="8"
+    />
+  </head>
 
-<body>
-  <!-- Navbar -->
-  <div class="navbar navbar-expand-lg px-3 ">
-    <div class="mt-2">
-      <a href="index.html" class="navbar-brand justify-content-center">
-        <img class="mb-3" src="./assets/images/logo.png" alt="Logo" width="50" />
-        <span class="navbar-brand fw-bold fs-2">CareerConnect</span>
-      </a>
-    </div>
+  <body>
+    <!-- Navbar -->
+    <div class="navbar navbar-expand-lg px-3">
+      <div class="mt-2">
+        <a href="index.html" class="navbar-brand justify-content-center">
+          <img
+            class="mb-3"
+            src="./assets/images/logo.png"
+            alt="Logo"
+            width="50"
+          />
+          <span class="navbar-brand fw-bold fs-2">CareerConnect</span>
+        </a>
+      </div>
 
-    <button class="navbar-toggler ms-auto" type="button" data-bs-toggle="collapse" data-bs-target="#mainmenu">
-      <span class="navbar-toggler-icon"></span>
-    </button>
+      <button
+        class="navbar-toggler ms-auto"
+        type="button"
+        data-bs-toggle="collapse"
+        data-bs-target="#mainmenu"
+      >
+        <span class="navbar-toggler-icon"></span>
+      </button>
 
-    <div class="navbar-collapse collapse px-4 fw-bold" id="mainmenu">
-      <ul class="navbar-nav align-items-center justify-content-center text-center text-black">
-        <li class="nav-item ">
-          <a class="nav-link nav-links scale fs-5" href="Job_Search.html">
-            <img src="assets/icons/recherche.png" alt="Search" width="25" />
-            search jobs
-          </a>
-        </li>
-         <li class="nav-item">
-          <a class="nav-link nav-links scale fs-5" href="career_resources.html">
-            <img src="assets/icons/poste-vacant.png" alt="Post" width="25" />
-            Search for a Candidate
-          </a>
-        </li>
+      <div class="navbar-collapse collapse px-4 fw-bold" id="mainmenu">
+        <ul
+          class="navbar-nav align-items-center justify-content-center text-center text-black"
+        >
+          <li class="nav-item">
+            <a class="nav-link nav-links scale fs-5" href="Job_Search.html">
+              <img src="assets/icons/recherche.png" alt="Search" width="25" />
+              search jobs
+            </a>
+          </li>
+          <li class="nav-item">
+            <a
+              class="nav-link nav-links scale fs-5"
+              href="career_resources.html"
+            >
+              <img src="assets/icons/poste-vacant.png" alt="Post" width="25" />
+              Search for a Candidate
+            </a>
+          </li>
 
-        <li class="nav-item ">
-          <a class="nav-link nav-links scale fs-5" href="Company_Search.html">
-            <img src="assets/icons/batiment.png" alt="Company" width="25" />
-            find companies
-          </a>
-        </li>
-        
-      </ul>
-      <div class="d-flex ms-auto nav-item justify-content-center d-block mt-2 mt-lg-0">
-        <li class="nav-link me-1">
-          <a class="btn sign-in-btn" href="connexion/Signup.html">Sign Up</a>
-        </li>
-        <li class="nav-link me-1">
-          <a class="btn sign-in-btn" href="connexion/Login.html">Login</a>
-        </li>
+          <li class="nav-item">
+            <a class="nav-link nav-links scale fs-5" href="Company_Search.html">
+              <img src="assets/icons/batiment.png" alt="Company" width="25" />
+              find companies
+            </a>
+          </li>
+        </ul>
+        <div
+          class="d-flex ms-auto nav-item justify-content-center d-block mt-2 mt-lg-0"
+        >
+          <li class="nav-link me-1">
+            <a class="btn sign-in-btn" href="connexion/Signup.html">Sign Up</a>
+          </li>
+          <li class="nav-link me-1">
+            <a class="btn sign-in-btn" href="connexion/Login.html">Login</a>
+          </li>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- Hero Section -->
-  <div class="hero-section text-center py-5">
-    <div class="container">
-      <h1 class="fw-bold display-4 mb-4">Find Your Dream Job</h1>
-      <p class="fs-5 mb-4">Connect with top companies and explore endless opportunities.</p>
-      <div class="d-flex justify-content-center mt-4 row">
-        <div class="col-12 col-sm-3 col-md-3 col-lg-3 py-1">
-          <a href="Job_Search.html" class="btn btn-primary btn-lg scale">Search Jobs</a>
-        </div>
-        <div class="col-12 col-sm-3 col-md-3 col-lg-3 py-1">
-          <a href="Post_a_Job.html" class="btn btn-outline-primary btn-lg scale">Post a Job</a>
+    <!-- Hero Section -->
+    <div class="hero-section text-center py-5">
+      <div class="container">
+        <h1 class="fw-bold display-4 mb-4">Find Your Dream Job</h1>
+        <p class="fs-5 mb-4">
+          Connect with top companies and explore endless opportunities.
+        </p>
+        <div class="d-flex justify-content-center mt-4 row">
+          <div class="col-12 col-sm-3 col-md-3 col-lg-3 py-1 text-white">
+            <a href="Job_Search.html" class="btn btn-primary btn-lg scale"
+              >Search Jobs</a
+            >
+          </div>
+          <div class="col-12 col-sm-3 col-md-3 col-lg-3 py-1">
+            <a
+              href="Post_a_Job.html"
+              class="btn btn-outline-primary btn-lg scale"
+              >Post a Job</a
+            >
+          </div>
         </div>
       </div>
     </div>
-  </div>
 
     <!-- Search Bar -->
     <div id="search-bar" class="container search-container mt-5 w-75">
       <div class="row align-items-center justify-content-center">
         <div class="col-10 col-md-6 col-lg-5">
-          <img src="assets/icons/home.png" class="col-1" alt="Job Icon">
-          <input class="col-10" type="text" placeholder="Intitulé du poste, mots-clés, entreprise">
+          <img src="assets/icons/home.png" class="col-1" alt="Job Icon" />
+          <input
+            class="col-9 col-md-10"
+            type="text"
+            placeholder="Intitulé du poste, mots-clés, entreprise"
+          />
         </div>
         <div class="col-10 col-md-6 col-lg-4">
-          <img src="assets/icons/location.png" class="col-1" alt="Location Icon">
-          <input class="col-10" type="text" placeholder="Ville ou wilaya">
+          <img
+            src="assets/icons/location.png"
+            class="col-1"
+            alt="Location Icon"
+          />
+          <input
+            class="col-9 col-md-10"
+            type="text"
+            placeholder="Ville ou wilaya"
+          />
         </div>
-        <div class="btn search-button col-10 col-md-4 col-lg-3 mt-md-2 mt-sm-2">Rechercher</div>
+        <div class="btn search-button col-10 col-md-4 col-lg-3 mt-md-2 mt-sm-2">
+          Rechercher
+        </div>
       </div>
     </div>
-    
-      <!-- Featured Jobs Section (Modernized) -->
-      <div class="container mt-5">
-        <h2 class="text-center mb-4">Featured Jobs</h2>
-        <div class="row">
-          <!-- Job 1 -->
-          <div class="col-md-4 mb-4">
-            <div class="card job-card animate__animated animate__fadeInUp">
-              <div class="card-body">
-                <h5 class="card-title">Software Engineer</h5>
-                <p class="card-text">Company: TechCorp</p>
-                <p class="card-text">Location: San Francisco, CA</p>
-                <p class="card-text">Salary: $90,000 - $120,000</p>
-                <a href="#" class="btn btn-primary">Apply Now</a>
-              </div>
-            </div>
-          </div>
-    
-          <!-- Job 2 -->
-          <div class="col-md-4 mb-4">
-            <div class="card job-card animate__animated animate__fadeInUp animate__delay-1s">
-              <div class="card-body">
-                <h5 class="card-title">Data Scientist</h5>
-                <p class="card-text">Company: DataWorks</p>
-                <p class="card-text">Location: New York, NY</p>
-                <p class="card-text">Salary: $80,000 - $110,000</p>
-                <a href="#" class="btn btn-primary">Apply Now</a>
-              </div>
-            </div>
-          </div>
-    
-          <!-- Job 3 -->
-          <div class="col-md-4 mb-4">
-            <div class="card job-card animate__animated animate__fadeInUp animate__delay-2s">
-              <div class="card-body">
-                <h5 class="card-title">Product Manager</h5>
-                <p class="card-text">Company: Innovate Inc.</p>
-                <p class="card-text">Location: Chicago, IL</p>
-                <p class="card-text">Salary: $100,000 - $130,000</p>
-                <a href="#" class="btn btn-primary">Apply Now</a>
-              </div>
+
+    <!-- Featured Jobs Section (Modernized) -->
+    <div class="container mt-5">
+      <h2 class="text-center mb-4">Featured Jobs</h2>
+      <div class="row">
+        <!-- Job 1 -->
+        <div class="col-md-4 mb-4">
+          <div class="card job-card animate__animated animate__fadeInUp">
+            <div class="card-body">
+              <h5 class="card-title">Software Engineer</h5>
+              <p class="card-text">Company: TechCorp</p>
+              <p class="card-text">Location: San Francisco, CA</p>
+              <p class="card-text">Salary: $90,000 - $120,000</p>
+              <a href="#" class="btn btn-primary">Apply Now</a>
             </div>
           </div>
         </div>
-      </div>
-    
-<!-- Upload CV Section - Card Style -->
-<div class="bg-light py-5">
-    <div class="container">
-      <div class="card shadow-sm p-4 mx-auto" style="max-width: 800px;">
-        <h2 class="fw-bold mb-3" style="color:#3a0ca3;">Upload Your CV</h2>
-        <p class="text-muted mb-4">
-          Let top employers find you. Upload your CV and get discovered by the best companies.
-        </p>
-        <a href="Upload_CV.html" class="btn btn-outline-primary btn-lg w-100">
-          Upload Your CV
-        </a>
+
+        <!-- Job 2 -->
+        <div class="col-md-4 mb-4">
+          <div
+            class="card job-card animate__animated animate__fadeInUp animate__delay-1s"
+          >
+            <div class="card-body">
+              <h5 class="card-title">Data Scientist</h5>
+              <p class="card-text">Company: DataWorks</p>
+              <p class="card-text">Location: New York, NY</p>
+              <p class="card-text">Salary: $80,000 - $110,000</p>
+              <a href="#" class="btn btn-primary">Apply Now</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Job 3 -->
+        <div class="col-md-4 mb-4">
+          <div
+            class="card job-card animate__animated animate__fadeInUp animate__delay-2s"
+          >
+            <div class="card-body">
+              <h5 class="card-title">Product Manager</h5>
+              <p class="card-text">Company: Innovate Inc.</p>
+              <p class="card-text">Location: Chicago, IL</p>
+              <p class="card-text">Salary: $100,000 - $130,000</p>
+              <a href="#" class="btn btn-primary">Apply Now</a>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
-<!-- Post a Job Section - Modern Design -->
-<div class="bg-gradient py-5" style="background: linear-gradient(135deg, #e0eafc, #cfdef3);">
-  <div class="container">
-    <div class="row align-items-center">
-      <div class="col-md-6">
-        <h2 class="fw-bold mb-3" style="color:#3a0ca3;">Find the Perfect Candidate</h2>
-        <p class="text-muted mb-4">
-          Are you looking to hire top talent for your team? CareerConnect makes it easy to post job openings and connect with skilled professionals. Whether you're a startup or an established company, we help you find the right fit for your organization.
-        </p>
-        <p class="text-muted mb-4">
-          Post your job today and reach thousands of qualified candidates actively searching for their next opportunity.
-        </p>
-        <a href="Post_a_Job.html" class="btn btn-outline-primary btn-lg">
-          Post a Job Now
-        </a>
+
+    <!-- Upload CV Section - Card Style -->
+    <div class="bg-light py-5">
+      <div class="container">
+        <div class="card shadow-sm p-4 mx-auto" style="max-width: 800px">
+          <h2 class="fw-bold mb-3" style="color: #3a0ca3">Upload Your CV</h2>
+          <p class="text-muted mb-4">
+            Let top employers find you. Upload your CV and get discovered by the
+            best companies.
+          </p>
+          <a href="Upload_CV.html" class="btn btn-outline-primary btn-lg w-100">
+            Upload Your CV
+          </a>
+        </div>
       </div>
-      <div class="col-md-6 text-center">
-          <!-- Placeholder Image -->
-          <img src="./assets/images/searchcC.jpg" alt="Search Candidate Illustration" class="img-fluid">
+    </div>
+    <!-- Post a Job Section - Modern Design -->
+    <div
+      class="bg-gradient py-5"
+      style="background: linear-gradient(135deg, #e0eafc, #cfdef3)"
+    >
+      <div class="container">
+        <div class="row align-items-center">
+          <div class="col-md-6">
+            <h2 class="fw-bold mb-3" style="color: #3a0ca3">
+              Find the Perfect Candidate
+            </h2>
+            <p class="text-muted mb-4">
+              Are you looking to hire top talent for your team? CareerConnect
+              makes it easy to post job openings and connect with skilled
+              professionals. Whether you're a startup or an established company,
+              we help you find the right fit for your organization.
+            </p>
+            <p class="text-muted mb-4">
+              Post your job today and reach thousands of qualified candidates
+              actively searching for their next opportunity.
+            </p>
+            <a href="Post_a_Job.html" class="btn btn-outline-primary btn-lg">
+              Post a Job Now
+            </a>
+          </div>
+          <div class="col-md-6 text-center">
+            <!-- Placeholder Image -->
+            <img
+              src="./assets/images/searchcC.jpg"
+              alt="Search Candidate Illustration"
+              class="img-fluid"
+            />
+          </div>
         </div>
       </div>
     </div>
     <!-- Footer -->
-<footer class="text-white py-5">
-  <div class="container">
-    <div class="row">
-      <!-- About Section -->
-      <div class="col-md-4 mb-4">
-        <h5 class="fw-bold mb-3">About CareerConnect</h5>
-        <p class="text-muted">
-          CareerConnect is your gateway to finding the perfect job or candidate. We connect top talent with leading companies worldwide.
-        </p>
-        <img src="/assets/images/logo.png" alt="CareerConnect Logo" width="100" class="mb-3">
-        <div class="d-flex">
-          <a href="#" class="text-white me-3">                
-            <i class="fab fa-facebook-f"></i>
-          </a>
-          <a href="#" class="text-white me-3">
-            <i class="fab fa-twitter"></i>
-          </a>
-          <a href="#" class="text-white me-3">
-            <i class="fab fa-linkedin-in"></i>
-          </a>
-          <a href="#" class="text-white">
-            <i class="fab fa-instagram"></i>
-          </a>
+    <footer class="text-white py-5">
+      <div class="container">
+        <div class="row">
+          <!-- About Section -->
+          <div class="col-md-4 mb-4">
+            <h5 class="fw-bold mb-3">About CareerConnect</h5>
+            <p class="text-muted">
+              CareerConnect is your gateway to finding the perfect job or
+              candidate. We connect top talent with leading companies worldwide.
+            </p>
+            <img
+              src="/assets/images/logo.png"
+              alt="CareerConnect Logo"
+              width="100"
+              class="mb-3"
+            />
+            
+            <div class="d-flex">
+              <a href="#">
+                <button type="button" class="btn btn-link btn-floating mx-1 color-primary">
+                  <i class="fab fa-facebook-f"></i>
+                </button>
+              </a>
+              <a href="">
+                <button type="button" class="btn btn-link btn-floating mx-1 color-primary">
+                  <i class="fab fa-google"></i>
+                </button>
+              </a>
+              
+                <a href="#" >
+                  <button type="button" class="btn btn-link btn-floating mx-1 color-primary">
+                    <i class="fab fa-twitter"></i>
+                  </button>
+                </a>
+              
+             
+                <a href="https://github.com/brogan00" target="_blank">
+                  <button type="button" class="btn btn-link btn-floating mx-1 color-primary">
+                    <i class="fab fa-github"></i>
+                  </button>
+                </a>
+             
+            </div>
+          </div>
+
+          <!-- Quick Links -->
+          <div class="col-md-2 mb-4">
+            <h5 class="fw-bold mb-3">Quick Links</h5>
+            <ul class="list-unstyled">
+              <li class="mb-2">
+                <a
+                  href="Job_Search.html"
+                  class="text-muted text-decoration-none"
+                  >Search Jobs</a
+                >
+              </li>
+              <li class="mb-2">
+                <a
+                  href="Company_Search.html"
+                  class="text-muted text-decoration-none"
+                  >Find Companies</a
+                >
+              </li>
+              <li class="mb-2">
+                <a
+                  href="Post_a_Job.html"
+                  class="text-muted text-decoration-none"
+                  >Post a Job</a
+                >
+              </li>
+              <li class="mb-2">
+                <a href="Upload_CV.html" class="text-muted text-decoration-none"
+                  >Upload CV</a
+                >
+              </li>
+              <li class="mb-2">
+                <a
+                  href="career_resources.html"
+                  class="text-muted text-decoration-none"
+                  >Career Resources</a
+                >
+              </li>
+            </ul>
+          </div>
+
+          <!-- Contact Information -->
+          <div class="col-md-3 mb-4">
+            <h5 class="fw-bold mb-3">Contact Us</h5>
+            <ul class="list-unstyled">
+              <li class="mb-2">
+                <i class="fas fa-map-marker-alt me-2"></i>
+                <span class="text-muted">algeria .tiaret zaroura </span>
+              </li>
+              <li class="mb-2">
+                <i class="fas fa-phone me-2"></i>
+                <span class="text-muted">+213552595513</span>
+              </li>
+              <li class="mb-2">
+                <i class="fas fa-envelope me-2"></i>
+                <span class="text-muted">fares.elhabash@univ-tiaret.dz</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Newsletter Subscription -->
+          <div class="col-md-3 mb-4">
+            <h5 class="fw-bold mb-3">Subscribe to Our Newsletter</h5>
+            <p class="text-muted">
+              Get the latest job alerts and career tips directly in your inbox.
+            </p>
+            <form>
+              <div class="input-group">
+                <input
+                  type="email"
+                  class="form-control"
+                  placeholder="Your email"
+                  aria-label="Your email"
+                />
+                <button class="btn btn-primary" type="button">Subscribe</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Copyright -->
+        <div class="text-center mt-4 pt-3 border-top">
+          <p class="text-muted mb-0">
+            &copy; 2025 CareerConnect. All rights reserved.
+          </p>
         </div>
       </div>
+    </footer>
 
-      <!-- Quick Links -->
-      <div class="col-md-2 mb-4">
-        <h5 class="fw-bold mb-3">Quick Links</h5>
-        <ul class="list-unstyled">
-          <li class="mb-2">
-            <a href="Job_Search.html" class="text-muted text-decoration-none">Search Jobs</a>
-          </li>
-          <li class="mb-2">
-            <a href="Company_Search.html" class="text-muted text-decoration-none">Find Companies</a>
-          </li>
-          <li class="mb-2">
-            <a href="Post_a_Job.html" class="text-muted text-decoration-none">Post a Job</a>
-          </li>
-          <li class="mb-2">
-            <a href="Upload_CV.html" class="text-muted text-decoration-none">Upload CV</a>
-          </li>
-          <li class="mb-2">
-            <a href="career_resources.html" class="text-muted text-decoration-none">Career Resources</a>
-          </li>
-        </ul>
-      </div>
+    <!-- Font Awesome Icons -->
 
-      <!-- Contact Information -->
-      <div class="col-md-3 mb-4">
-        <h5 class="fw-bold mb-3">Contact Us</h5>
-        <ul class="list-unstyled">
-          <li class="mb-2">
-            <i class="fas fa-map-marker-alt me-2"></i>
-            <span class="text-muted">algeria .tiaret zaroura </span>
-          </li>
-          <li class="mb-2">
-            <i class="fas fa-phone me-2"></i>
-            <span class="text-muted">+213552595513</span>
-          </li>
-          <li class="mb-2">
-            <i class="fas fa-envelope me-2"></i>
-            <span class="text-muted">fares.elhabash@univ-tiaret.dz</span>
-          </li>
-        </ul>
-      </div>
-
-      <!-- Newsletter Subscription -->
-      <div class="col-md-3 mb-4">
-        <h5 class="fw-bold mb-3">Subscribe to Our Newsletter</h5>
-        <p class="text-muted">Get the latest job alerts and career tips directly in your inbox.</p>
-        <form>
-          <div class="input-group">
-            <input type="email" class="form-control" placeholder="Your email" aria-label="Your email">
-            <button class="btn btn-primary" type="button">Subscribe</button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <!-- Copyright -->
-    <div class="text-center mt-4 pt-3 border-top">
-      <p class="text-muted mb-0">&copy; 2025 CareerConnect. All rights reserved.</p>
-    </div>
-  </div>
-</footer>
-
-<!-- Font Awesome Icons -->
-<script src="https://kit.fontawesome.com/a076d05399.js"></script>
-  </div>
-      
-      <script src="assets/JS/bootstrap.min.js"></script>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.js"></script>
-    </body>
-    
-    </html>
+    <!--      <script src="https://kit.fontawesome.com/a076d05399.js"></script> -->
+    <script src="assets/JS/bootstrap.min.js"></script>
+    <script src="assets/icons/all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.js"></script>
+  </body>
+</html>
