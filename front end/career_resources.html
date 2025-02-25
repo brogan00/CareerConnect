@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Search for a Candidate - CareerConnect</title>
+  <link rel="stylesheet" href="assets/CSS/bootstrap.min.css" />
+  <link rel="stylesheet" href="assets/CSS/style.css" />
+  <link rel="icon" type="image/png" href="./assets/images/hamidou.png" width="8" />
+  <style>
+    /* Custom Styles */
+    .filter-section {
+      background: #f8f9fa;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .filter-section h5 {
+      color: #3a0ca3;
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+
+    .filter-section .form-label {
+      font-weight: 500;
+      color: #333;
+    }
+
+    .filter-section .form-control,
+    .filter-section .form-select {
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      padding: 10px;
+    }
+
+    .filter-section .form-range {
+      width: 100%;
+    }
+
+    .candidate-card {
+      border: none;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease;
+    }
+
+    .candidate-card:hover {
+      transform: translateY(-5px);
+    }
+
+    .candidate-card img {
+      border-radius: 50%;
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+    }
+
+    .candidate-card .btn-primary {
+      background: #3a0ca3;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 20px;
+    }
+
+    .candidate-card .btn-primary:hover {
+      background: #480ca8;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Navbar -->
+  <div class="navbar navbar-expand-lg px-3 ">
+    <div class="mt-2">
+      <a href="index.html" class="navbar-brand justify-content-center">
+        <img class="mb-3" src="./assets/images/logo.png" alt="Logo" width="50" />
+        <span class="navbar-brand fw-bold fs-2">CareerConnect</span>
+      </a>
+    </div>
+
+    <button class="navbar-toggler ms-auto" type="button" data-bs-toggle="collapse" data-bs-target="#mainmenu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="navbar-collapse collapse px-4 fw-bold" id="mainmenu">
+      <ul class="navbar-nav align-items-center justify-content-center text-center text-black">
+        <li class="nav-item ">
+          <a class="nav-link nav-links scale fs-5" href="Job_Search.html">
+            <img src="assets/icons/recherche.png" alt="Search" width="25" />
+            search jobs
+          </a>
+        </li>
+         <li class="nav-item">
+          <a class="nav-link nav-links scale fs-5" href="career_resources.html">
+            <img src="assets/icons/poste-vacant.png" alt="Post" width="25" />
+            Search for a Candidate
+          </a>
+        </li>
+
+        <li class="nav-item ">
+          <a class="nav-link nav-links scale fs-5" href="Company_Search.html">
+            <img src="assets/icons/batiment.png" alt="Company" width="25" />
+            find companies
+          </a>
+        </li>
+        
+      </ul>
+      <div class="d-flex ms-auto nav-item justify-content-center d-block mt-2 mt-lg-0">
+        <li class="nav-link me-1">
+          <a class="btn sign-in-btn" href="connexion/Signup.html">Sign Up</a>
+        </li>
+        <li class="nav-link me-1">
+          <a class="btn sign-in-btn" href="connexion/Login.html">Login</a>
+        </li>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="container my-5">
+    <div class="row">
+      <!-- Filter Section -->
+      <div class="col-lg-4 mb-4">
+        <div class="filter-section">
+          <h5>Filter Candidates</h5>
+          <form>
+            <!-- Keyword Search -->
+            <div class="mb-3">
+              <label for="keyword" class="form-label">Keywords</label>
+              <input type="text" class="form-control" id="keyword" placeholder="e.g., Python, React, Marketing">
+            </div>
+
+            <!-- Location -->
+            <div class="mb-3">
+              <label for="location" class="form-label">Location</label>
+              <input type="text" class="form-control" id="location" placeholder="e.g., New York, Remote">
+            </div>
+
+            <!-- Experience Level -->
+            <div class="mb-3">
+              <label for="experience" class="form-label">Experience Level</label>
+              <select class="form-select" id="experience">
+                <option value="">Any</option>
+                <option value="entry">Entry Level</option>
+                <option value="mid">Mid Level</option>
+                <option value="senior">Senior Level</option>
+              </select>
+            </div>
+
+            <!-- Salary Range -->
+            <div class="mb-3">
+              <label for="salary" class="form-label">Salary Range</label>
+              <input type="range" class="form-range" id="salary" min="0" max="200000" step="1000">
+              <div class="d-flex justify-content-between">
+                <span>$0</span>
+                <span>$200,000</span>
+              </div>
+            </div>
+
+            <!-- Skills -->
+            <div class="mb-3">
+              <label for="skills" class="form-label">Skills</label>
+              <input type="text" class="form-control" id="skills" placeholder="e.g., JavaScript, Data Analysis">
+            </div>
+
+            <!-- Education -->
+            <div class="mb-3">
+              <label for="education" class="form-label">Education</label>
+              <select class="form-select" id="education">
+                <option value="">Any</option>
+                <option value="bachelor">Bachelor's Degree</option>
+                <option value="master">Master's Degree</option>
+                <option value="phd">PhD</option>
+              </select>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Candidate List -->
+      <div class="col-lg-8">
+        <h2 class="mb-4">Candidates</h2>
+        <div class="row">
+          <!-- Candidate 1 -->
+          <div class="col-md-6 mb-4">
+            <div class="card candidate-card">
+              <div class="card-body text-center">
+                <img src="/assets/icons/recherche.png" alt="Candidate Image" class="mb-3">
+                <h5 class="card-title">John Doe</h5>
+                <p class="card-text">Software Engineer</p>
+                <p class="card-text"><small class="text-muted">San Francisco, CA</small></p>
+                <a href="#" class="btn btn-primary">View Profile</a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Candidate 2 -->
+          <div class="col-md-6 mb-4">
+            <div class="card candidate-card">
+              <div class="card-body text-center">
+                <img src="/assets/icons/poste-vacant.png" alt="Candidate Image" class="mb-3">
+                <h5 class="card-title">Jane Smith</h5>
+                <p class="card-text">Data Scientist</p>
+                <p class="card-text"><small class="text-muted">New York, NY</small></p>
+                <a href="#" class="btn btn-primary">View Profile</a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Candidate 3 -->
+          <div class="col-md-6 mb-4">
+            <div class="card candidate-card">
+              <div class="card-body text-center">
+                <img src="assets/icons/batiment.png" alt="Candidate Image" class="mb-3">
+                <h5 class="card-title">Alice Johnson</h5>
+                <p class="card-text">Product Manager</p>
+                <p class="card-text"><small class="text-muted">Chicago, IL</small></p>
+                <a href="#" class="btn btn-primary">View Profile</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+      </div>
+      <!-- Footer -->
+<footer class="text-white py-5">
+    <div class="container">
+      <div class="row">
+        <!-- About Section -->
+        <div class="col-md-4 mb-4">
+          <h5 class="fw-bold mb-3">About CareerConnect</h5>
+          <p class="text-muted">
+            CareerConnect is your gateway to finding the perfect job or candidate. We connect top talent with leading companies worldwide.
+          </p>
+          <img src="/assets/images/logo.png" alt="CareerConnect Logo" width="100" class="mb-3">
+          <div class="d-flex">
+            <a href="#" class="text-white me-3">
+              <i class="fab fa-facebook-f"></i>
+            </a>
+            <a href="#" class="text-white me-3">
+              <i class="fab fa-twitter"></i>
+            </a>
+            <a href="#" class="text-white me-3">
+              <i class="fab fa-linkedin-in"></i>
+            </a>
+            <a href="#" class="text-white">
+              <i class="fab fa-instagram"></i>
+            </a>
+          </div>
+        </div>
+  
+        <!-- Quick Links -->
+        <div class="col-md-2 mb-4">
+          <h5 class="fw-bold mb-3">Quick Links</h5>
+          <ul class="list-unstyled">
+            <li class="mb-2">
+              <a href="Job_Search.html" class="text-muted text-decoration-none">Search Jobs</a>
+            </li>
+            <li class="mb-2">
+              <a href="Company_Search.html" class="text-muted text-decoration-none">Find Companies</a>
+            </li>
+            <li class="mb-2">
+              <a href="Post_a_Job.html" class="text-muted text-decoration-none">Post a Job</a>
+            </li>
+            <li class="mb-2">
+              <a href="Upload_CV.html" class="text-muted text-decoration-none">Upload CV</a>
+            </li>
+            <li class="mb-2">
+              <a href="career_resources.html" class="text-muted text-decoration-none">Career Resources</a>
+            </li>
+          </ul>
+        </div>
+  
+        <!-- Contact Information -->
+        <div class="col-md-3 mb-4">
+          <h5 class="fw-bold mb-3">Contact Us</h5>
+          <ul class="list-unstyled">
+            <li class="mb-2">
+              <i class="fas fa-map-marker-alt me-2"></i>
+              <span class="text-muted">algeria .tiaret zaroura </span>
+            </li>
+            <li class="mb-2">
+              <i class="fas fa-phone me-2"></i>
+              <span class="text-muted">+213552595513</span>
+            </li>
+            <li class="mb-2">
+              <i class="fas fa-envelope me-2"></i>
+              <span class="text-muted">fares.elhabash@univ-tiaret.dz</span>
+            </li>
+          </ul>
+        </div>
+  
+        <!-- Newsletter Subscription -->
+        <div class="col-md-3 mb-4">
+          <h5 class="fw-bold mb-3">Subscribe to Our Newsletter</h5>
+          <p class="text-muted">Get the latest job alerts and career tips directly in your inbox.</p>
+          <form>
+            <div class="input-group">
+              <input type="email" class="form-control" placeholder="Your email" aria-label="Your email">
+              <button class="btn btn-primary" type="button">Subscribe</button>
+            </div>
+          </form>
+        </div>
+      </div>
+  
+      <!-- Copyright -->
+      <div class="text-center mt-4 pt-3 border-top">
+        <p class="text-muted mb-0">&copy; 2025 CareerConnect. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+    </div>
+  </div>
+
+  <script src="assets/JS/bootstrap.min.js"></script>
+</body>
+
+</html>
