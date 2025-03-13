@@ -126,7 +126,7 @@
       <div class="col-lg-4 mb-4">
         <div class="filter-section">
           <h5>Filter Candidates</h5>
-          <form>
+          <form id="filterForm">
             <!-- Keyword Search -->
             <div class="mb-3">
               <label for="keyword" class="form-label">Keywords</label>
@@ -156,7 +156,7 @@
               <input type="range" class="form-range" id="salary" min="0" max="200000" step="1000">
               <div class="d-flex justify-content-between">
                 <span>$0</span>
-                <span>$200,000</span>
+                <span id="salaryValue">$200,000</span>
               </div>
             </div>
 
@@ -186,7 +186,7 @@
       <!-- Candidate List -->
       <div class="col-lg-8">
         <h2 class="mb-4">Candidates</h2>
-        <div class="row">
+        <div class="row" id="candidateList">
           <!-- Candidate 1 -->
           <div class="col-md-6 mb-4">
             <div class="card candidate-card">
@@ -195,7 +195,7 @@
                 <h5 class="card-title">John Doe</h5>
                 <p class="card-text">Software Engineer</p>
                 <p class="card-text"><small class="text-muted">San Francisco, CA</small></p>
-                <a href="#" class="btn btn-primary">View Profile</a>
+                <a href="profile.html" class="btn btn-primary">View Profile</a>
               </div>
             </div>
           </div>
@@ -208,7 +208,7 @@
                 <h5 class="card-title">Jane Smith</h5>
                 <p class="card-text">Data Scientist</p>
                 <p class="card-text"><small class="text-muted">New York, NY</small></p>
-                <a href="#" class="btn btn-primary">View Profile</a>
+                <a href="profile.html" class="btn btn-primary">View Profile</a>
               </div>
             </div>
           </div>
@@ -221,15 +221,17 @@
                 <h5 class="card-title">Alice Johnson</h5>
                 <p class="card-text">Product Manager</p>
                 <p class="card-text"><small class="text-muted">Chicago, IL</small></p>
-                <a href="#" class="btn btn-primary">View Profile</a>
+                <a href="profile.html" class="btn btn-primary">View Profile</a>
               </div>
             </div>
           </div>
         </div>
-        
       </div>
-      <!-- Footer -->
-<footer class="text-white py-5">
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="text-white py-5">
     <div class="container">
       <div class="row">
         <!-- About Section -->
@@ -315,10 +317,54 @@
       </div>
     </div>
   </footer>
-    </div>
-  </div>
 
   <script src="assets/JS/bootstrap.min.js"></script>
+  <script>
+    // Update Salary Range Value
+    const salaryRange = document.getElementById('salary');
+    const salaryValue = document.getElementById('salaryValue');
+
+    salaryRange.addEventListener('input', function () {
+      salaryValue.textContent = `$${this.value}`;
+    });
+
+    // Filter Candidates (Example Functionality)
+    const filterForm = document.getElementById('filterForm');
+    const candidateList = document.getElementById('candidateList');
+
+    filterForm.addEventListener('submit', function (e) {
+      e.preventDefault(); // Prevent form submission
+
+      // Get filter values
+      const keyword = document.getElementById('keyword').value.toLowerCase();
+      const location = document.getElementById('location').value.toLowerCase();
+      const experience = document.getElementById('experience').value;
+      const salary = salaryRange.value;
+      const skills = document.getElementById('skills').value.toLowerCase();
+      const education = document.getElementById('education').value;
+
+      // Filter candidates (example logic)
+      const candidates = candidateList.querySelectorAll('.col-md-6');
+      candidates.forEach(candidate => {
+        const title = candidate.querySelector('.card-title').textContent.toLowerCase();
+        const loc = candidate.querySelector('.card-text small').textContent.toLowerCase();
+        const exp = candidate.querySelector('.card-text').textContent.toLowerCase();
+
+        const matchKeyword = title.includes(keyword) || loc.includes(keyword);
+        const matchLocation = loc.includes(location);
+        const matchExperience = experience === '' || exp.includes(experience);
+        const matchSalary = true; // Add salary logic if needed
+        const matchSkills = true; // Add skills logic if needed
+        const matchEducation = true; // Add education logic if needed
+
+        if (matchKeyword && matchLocation && matchExperience && matchSalary && matchSkills && matchEducation) {
+          candidate.style.display = 'block';
+        } else {
+          candidate.style.display = 'none';
+        }
+      });
+    });
+  </script>
 </body>
 
 </html>

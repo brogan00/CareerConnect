@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Candidate Profile - CareerConnect</title>
+  <link rel="stylesheet" href="assets/CSS/bootstrap.min.css" />
+  <link rel="stylesheet" href="assets/CSS/style.css" />
+  <link rel="icon" type="image/png" href="./assets/images/hamidou.png" width="8" />
+  <style>
+    /* Custom Styles for Profile Page */
+    .profile-card {
+      border: none;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+    }
+
+    .profile-card img {
+      border-radius: 50%;
+      width: 120px;
+      height: 120px;
+      object-fit: cover;
+      margin-bottom: 20px;
+    }
+
+    .profile-card h2 {
+      color: #3a0ca3;
+      font-weight: bold;
+    }
+
+    .profile-card p {
+      color: #555;
+    }
+
+    .profile-card .btn-primary {
+      background: #3a0ca3;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 20px;
+    }
+
+    .profile-card .btn-primary:hover {
+      background: #480ca8;
+    }
+
+    .profile-card .btn-success {
+      background: #28a745;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 20px;
+    }
+
+    .profile-card .btn-success:hover {
+      background: #218838;
+    }
+
+    .profile-card .btn-group {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Navbar -->
+  <div class="navbar navbar-expand-lg px-3 ">
+    <div class="mt-2">
+      <a href="index.html" class="navbar-brand justify-content-center">
+        <img class="mb-3" src="./assets/images/logo.png" alt="Logo" width="50" />
+        <span class="navbar-brand fw-bold fs-2">CareerConnect</span>
+      </a>
+    </div>
+
+    <button class="navbar-toggler ms-auto" type="button" data-bs-toggle="collapse" data-bs-target="#mainmenu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="navbar-collapse collapse px-4 fw-bold" id="mainmenu">
+      <ul class="navbar-nav align-items-center justify-content-center text-center text-black">
+        <li class="nav-item ">
+          <a class="nav-link nav-links scale fs-5" href="Job_Search.html">
+            <img src="assets/icons/recherche.png" alt="Search" width="25" />
+            search jobs
+          </a>
+        </li>
+         <li class="nav-item">
+          <a class="nav-link nav-links scale fs-5" href="career_resources.html">
+            <img src="assets/icons/poste-vacant.png" alt="Post" width="25" />
+            Search for a Candidate
+          </a>
+        </li>
+
+        <li class="nav-item ">
+          <a class="nav-link nav-links scale fs-5" href="Company_Search.html">
+            <img src="assets/icons/batiment.png" alt="Company" width="25" />
+            find companies
+          </a>
+        </li>
+        
+      </ul>
+      <div class="d-flex ms-auto nav-item justify-content-center d-block mt-2 mt-lg-0">
+        <li class="nav-link me-1">
+          <a class="btn sign-in-btn" href="connexion/Signup.html">Sign Up</a>
+        </li>
+        <li class="nav-link me-1">
+          <a class="btn sign-in-btn" href="connexion/Login.html">Login</a>
+        </li>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="container my-5">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div class="profile-card text-center">
+          <!-- Candidate Image -->
+          <img src="/assets/icons/recherche.png" alt="Candidate Image" />
+
+          <!-- Candidate Name -->
+          <h2>John Doe</h2>
+
+          <!-- Candidate Title -->
+          <p class="text-muted">Software Engineer</p>
+
+          <!-- Candidate Details -->
+          <div class="text-start">
+            <p><strong>Location:</strong> San Francisco, CA</p>
+            <p><strong>Experience:</strong> 5 years</p>
+            <p><strong>Skills:</strong> Python, JavaScript, React, Node.js</p>
+            <p><strong>Education:</strong> Bachelor's in Computer Science</p>
+            <p><strong>About:</strong> John is a passionate software engineer with expertise in building scalable web applications. He loves solving complex problems and contributing to open-source projects.</p>
+          </div>
+
+          <!-- Buttons -->
+          <div class="btn-group">
+            <a href="candidate1.html" class="btn btn-primary">View Profile</a>
+            <button class="btn btn-success" onclick="contactCandidate()">Contact Candidate</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="text-white py-5">
+    <div class="container">
+      <div class="row">
+        <!-- About Section -->
+        <div class="col-md-4 mb-4">
+          <h5 class="fw-bold mb-3">About CareerConnect</h5>
+          <p class="text-muted">
+            CareerConnect is your gateway to finding the perfect job or candidate. We connect top talent with leading companies worldwide.
+          </p>
+          <img src="/assets/images/logo.png" alt="CareerConnect Logo" width="100" class="mb-3">
+          <div class="d-flex">
+            <a href="#" class="text-white me-3">
+              <i class="fab fa-facebook-f"></i>
+            </a>
+            <a href="#" class="text-white me-3">
+              <i class="fab fa-twitter"></i>
+            </a>
+            <a href="#" class="text-white me-3">
+              <i class="fab fa-linkedin-in"></i>
+            </a>
+            <a href="#" class="text-white">
+              <i class="fab fa-instagram"></i>
+            </a>
+          </div>
+        </div>
+  
+        <!-- Quick Links -->
+        <div class="col-md-2 mb-4">
+          <h5 class="fw-bold mb-3">Quick Links</h5>
+          <ul class="list-unstyled">
+            <li class="mb-2">
+              <a href="Job_Search.html" class="text-muted text-decoration-none">Search Jobs</a>
+            </li>
+            <li class="mb-2">
+              <a href="Company_Search.html" class="text-muted text-decoration-none">Find Companies</a>
+            </li>
+            <li class="mb-2">
+              <a href="Post_a_Job.html" class="text-muted text-decoration-none">Post a Job</a>
+            </li>
+            <li class="mb-2">
+              <a href="Upload_CV.html" class="text-muted text-decoration-none">Upload CV</a>
+            </li>
+            <li class="mb-2">
+              <a href="career_resources.html" class="text-muted text-decoration-none">Career Resources</a>
+            </li>
+          </ul>
+        </div>
+  
+        <!-- Contact Information -->
+        <div class="col-md-3 mb-4">
+          <h5 class="fw-bold mb-3">Contact Us</h5>
+          <ul class="list-unstyled">
+            <li class="mb-2">
+              <i class="fas fa-map-marker-alt me-2"></i>
+              <span class="text-muted">algeria .tiaret zaroura </span>
+            </li>
+            <li class="mb-2">
+              <i class="fas fa-phone me-2"></i>
+              <span class="text-muted">+213552595513</span>
+            </li>
+            <li class="mb-2">
+              <i class="fas fa-envelope me-2"></i>
+              <span class="text-muted">fares.elhabash@univ-tiaret.dz</span>
+            </li>
+          </ul>
+        </div>
+  
+        <!-- Newsletter Subscription -->
+        <div class="col-md-3 mb-4">
+          <h5 class="fw-bold mb-3">Subscribe to Our Newsletter</h5>
+          <p class="text-muted">Get the latest job alerts and career tips directly in your inbox.</p>
+          <form>
+            <div class="input-group">
+              <input type="email" class="form-control" placeholder="Your email" aria-label="Your email">
+              <button class="btn btn-primary" type="button">Subscribe</button>
+            </div>
+          </form>
+        </div>
+      </div>
+  
+      <!-- Copyright -->
+      <div class="text-center mt-4 pt-3 border-top">
+        <p class="text-muted mb-0">&copy; 2025 CareerConnect. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="assets/JS/bootstrap.min.js"></script>
+  <script>
+    // Function to handle "Contact Candidate" button click
+    function contactCandidate() {
+      // Example: Open an email client with a pre-filled email
+      const email = "john.doe@example.com"; // Replace with the candidate's email
+      const subject = "Opportunity at CareerConnect";
+      const body = "Hello John, I came across your profile on CareerConnect and would like to discuss an opportunity with you.";
+      window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+      // Alternatively, you can display a contact form or modal
+      // alert("Contact form will be displayed here.");
+    }
+  </script>
+</body>
+
+</html>
