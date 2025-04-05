@@ -1,48 +1,129 @@
 <?php
-require_once "config/database.php";
+include "connexion/config.php";
+define('SECURE_ACCESS', true);
 session_start();
+?>
 
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_SESSION["user_id"])) {
-    if (!isset($_FILES['cv']) || $_FILES['cv']['error'] != 0) {
-        die("Error: No file uploaded or upload error.");
-    }
+<!DOCTYPE html>
+<html lang="en">
 
-    $allowed_extensions = ['pdf', 'doc', 'docx'];
-    $max_file_size = 2 * 1024 * 1024; // 2MB
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Upload CV - CareerConnect</title>
+    <link rel="stylesheet" href="assets/CSS/bootstrap.min.css" />
+    <link rel="stylesheet" href="assets/CSS/style.css" />
+    <link rel="icon" type="image/png" href="./assets/images/hamidou.png" width="8" />
+</head>
 
-    $filename = $_FILES['cv']['name'];
-    $temp_name = $_FILES['cv']['tmp_name'];
-    $file_size = $_FILES['cv']['size'];
-    $file_ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+<body>
+    <!-- Navbar -->
 
-    // Validate file type
-    if (!in_array($file_ext, $allowed_extensions)) {
-        die("Error: Invalid file type. Only PDF, DOC, and DOCX are allowed.");
-    }
+    <?php include "templates/header.php" ?>
 
-    // Validate file size
-    if ($file_size > $max_file_size) {
-        die("Error: File size exceeds 2MB.");
-    }
+    <div class="container mt-5">
+        <h2 class="text-center mb-4">Upload Your CV</h2>
+        <form>
+            <!-- Personal Information -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Personal Information</h5>
+                    <div class="mb-3">
+                        <label for="full-name" class="form-label">Full Name</label>
+                        <input type="text" class="form-control" id="full-name" placeholder="Enter your full name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email Address</label>
+                        <input type="email" class="form-control" id="email" placeholder="Enter your email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="phone" class="form-label">Phone Number</label>
+                        <input type="tel" class="form-control" id="phone" placeholder="Enter your phone number" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="address" class="form-label">Address</label>
+                        <input type="text" class="form-control" id="address" placeholder="Enter your address">
+                    </div>
+                </div>
+            </div>
 
-    // Create a unique file name to prevent overwriting
-    $new_filename = uniqid("cv_", true) . "." . $file_ext;
-    $upload_dir = "uploads/cv/";
+            <!-- Education -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Education</h5>
+                    <div class="mb-3">
+                        <label for="degree" class="form-label">Degree</label>
+                        <input type="text" class="form-control" id="degree" placeholder="e.g., Bachelor of Science in Computer Science" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="institution" class="form-label">Institution</label>
+                        <input type="text" class="form-control" id="institution" placeholder="e.g., University of Example" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="graduation-year" class="form-label">Graduation Year</label>
+                        <input type="number" class="form-control" id="graduation-year" placeholder="e.g., 2022" required>
+                    </div>
+                </div>
+            </div>
 
-    if (!is_dir($upload_dir)) {
-        mkdir($upload_dir, 0777, true);
-    }
+            <!-- Work Experience -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Work Experience</h5>
+                    <div class="mb-3">
+                        <label for="job-title" class="form-label">Job Title</label>
+                        <input type="text" class="form-control" id="job-title" placeholder="e.g., Software Engineer" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="company" class="form-label">Company</label>
+                        <input type="text" class="form-control" id="company" placeholder="e.g., TechCorp" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="start-date" class="form-label">Start Date</label>
+                        <input type="date" class="form-control" id="start-date" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="end-date" class="form-label">End Date</label>
+                        <input type="date" class="form-control" id="end-date">
+                    </div>
+                    <div class="mb-3">
+                        <label for="job-description" class="form-label">Job Description</label>
+                        <textarea class="form-control" id="job-description" rows="3" placeholder="Describe your role and responsibilities"></textarea>
+                    </div>
+                </div>
+            </div>
 
-    if (move_uploaded_file($temp_name, $upload_dir . $new_filename)) {
-        $stmt = $conn->prepare("INSERT INTO resumes (user_id, file_name) VALUES (?, ?)");
-        if ($stmt->execute([$_SESSION["user_id"], $new_filename])) {
-            echo "CV uploaded successfully!";
-        } else {
-            echo "Error saving file info to database.";
-        }
-    } else {
-        echo "Error uploading CV.";
-    }
-} else {
-    echo "Unauthorized access.";
-}
+            <!-- Skills -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Skills</h5>
+                    <div class="mb-3">
+                        <label for="skills" class="form-label">Add Skills</label>
+                        <input type="text" class="form-control" id="skills" placeholder="e.g., JavaScript, Python, Project Management">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upload CV -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Upload Your CV</h5>
+                    <div class="mb-3">
+                        <label for="cv-upload" class="form-label">Choose File</label>
+                        <input type="file" class="form-control" id="cv-upload" accept=".pdf,.doc,.docx" required>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="text-center">
+                <button type="submit" class="btn btn-primary btn-lg">Submit</button>
+            </div>
+        </form>
+    </div>
+
+    <?php include "templates/footer.php" ?>
+</body>
+
+</html>

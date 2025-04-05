@@ -93,7 +93,7 @@
             search jobs
           </a>
         </li>
-         <li class="nav-item">
+        <li class="nav-item">
           <a class="nav-link nav-links scale fs-5" href="career_resources.html">
             <img src="assets/icons/poste-vacant.png" alt="Post" width="25" />
             Search for a Candidate
@@ -106,7 +106,7 @@
             find companies
           </a>
         </li>
-        
+
       </ul>
       <div class="d-flex ms-auto nav-item justify-content-center d-block mt-2 mt-lg-0">
         <li class="nav-link me-1">
@@ -155,8 +155,8 @@
               <label for="salary" class="form-label">Salary Range</label>
               <input type="range" class="form-range" id="salary" min="0" max="200000" step="1000">
               <div class="d-flex justify-content-between">
-                <span>$0</span>
-                <span id="salaryValue">$200,000</span>
+                <span>0 DZ</span>
+                <span id="salaryValue">100000 DZ</span>
               </div>
             </div>
 
@@ -238,7 +238,8 @@
         <div class="col-md-4 mb-4">
           <h5 class="fw-bold mb-3">About CareerConnect</h5>
           <p class="text-muted">
-            CareerConnect is your gateway to finding the perfect job or candidate. We connect top talent with leading companies worldwide.
+            CareerConnect is your gateway to finding the perfect job or candidate. We connect top talent with leading
+            companies worldwide.
           </p>
           <img src="/assets/images/logo.png" alt="CareerConnect Logo" width="100" class="mb-3">
           <div class="d-flex">
@@ -256,7 +257,7 @@
             </a>
           </div>
         </div>
-  
+
         <!-- Quick Links -->
         <div class="col-md-2 mb-4">
           <h5 class="fw-bold mb-3">Quick Links</h5>
@@ -278,7 +279,7 @@
             </li>
           </ul>
         </div>
-  
+
         <!-- Contact Information -->
         <div class="col-md-3 mb-4">
           <h5 class="fw-bold mb-3">Contact Us</h5>
@@ -297,7 +298,7 @@
             </li>
           </ul>
         </div>
-  
+
         <!-- Newsletter Subscription -->
         <div class="col-md-3 mb-4">
           <h5 class="fw-bold mb-3">Subscribe to Our Newsletter</h5>
@@ -310,7 +311,7 @@
           </form>
         </div>
       </div>
-  
+
       <!-- Copyright -->
       <div class="text-center mt-4 pt-3 border-top">
         <p class="text-muted mb-0">&copy; 2025 CareerConnect. All rights reserved.</p>
@@ -325,7 +326,7 @@
     const salaryValue = document.getElementById('salaryValue');
 
     salaryRange.addEventListener('input', function () {
-      salaryValue.textContent = `$${this.value}`;
+      salaryValue.textContent = `${this.value} DZ`;
     });
 
     // Filter Candidates (Example Functionality)

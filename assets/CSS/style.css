@@ -106,6 +106,7 @@ body {
   transform: scale(1.05);
   box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
 }
+
 /* Hero Section */
 .hero-section {
   background: linear-gradient(135deg, #7a1bff, #3a0ca3);
@@ -113,10 +114,12 @@ body {
   padding: 100px 0;
   border-radius: 0 0 30px 30px;
 }
+
 .hero-section h1 {
   font-size: 3.5rem;
   font-weight: bold;
 }
+
 .hero-section p {
   font-size: 1.25rem;
 }
@@ -124,108 +127,110 @@ body {
 
 /* Job Cards */
 .job-card {
-border: none;
-border-radius: 15px;
-box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: none;
+  border-radius: 15px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .job-card:hover {
-transform: translateY(-10px);
-box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+  transform: translateY(-10px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
 }
 
 /* Big Buttons */
 .btn-gradient-primary {
-background: linear-gradient(135deg, #7a1bff, #3a0ca3);
-color: white;
-border: none;
-padding: 15px 30px;
-font-size: 1.25rem;
-border-radius: 10px;
-transition: transform 0.3s ease;
+  background: linear-gradient(135deg, #7a1bff, #3a0ca3);
+  color: white;
+  border: none;
+  padding: 15px 30px;
+  font-size: 1.25rem;
+  border-radius: 10px;
+  transition: transform 0.3s ease;
 }
 
 .btn-gradient-primary:hover {
-transform: scale(1.05);
+  transform: scale(1.05);
 }
 
 .btn-gradient-secondary {
-background: linear-gradient(135deg, #ff6b6b, #ff1b1b);
-color: white;
-border: none;
-padding: 15px 30px;
-font-size: 1.25rem;
-border-radius: 10px;
-transition: transform 0.3s ease;
+  background: linear-gradient(135deg, #ff6b6b, #ff1b1b);
+  color: white;
+  border: none;
+  padding: 15px 30px;
+  font-size: 1.25rem;
+  border-radius: 10px;
+  transition: transform 0.3s ease;
 }
 
 .btn-gradient-secondary:hover {
-transform: scale(1.05);
+  transform: scale(1.05);
 }
 
 /* Animations */
 .animate__animated {
-animation-duration: 1s;
+  animation-duration: 1s;
 }
-   /* Company Search Bar */
-   .search-container {
-    display: flex;
-    border: 3px solid #7a1bff;
-    border-radius: 15px;
-    padding: 25px;
-    background-color: #fff;
-    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
-    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
-  }
-  
-  .search-container:hover {
-    transform: scale(1.02);
-  }
-  
-  .search-container div input {
-    border: none;
-    outline: none;
-    padding: 18px;
-    font-size: 1.3em;
-    flex: 1;
-    margin-right: 12px;
-    transition: background-color 0.3s ease-in-out;
-  }
-  
-  .search-button {
-    background-color: #7a1bff;
-    color: white;
-    border: none;
-    padding: 18px 10px;
-    cursor: pointer;
-    border-radius: 8px;
-    font-size: 1.3em;
-    transition: background-color 0.3s ease-in-out, transform 0.2s ease-in-out;
-  }
-  
-  .search-button:hover {
-    color: white;
-    background-color: #7a1bff;
-    transform: scale(1.05);
-  }
-  
-  /* Company Cards */
-  .company-card {
-    border: 1px solid #ddd;
-    border-radius: 10px;
-    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
-  }
-  
-  .company-card:hover {
-    transform: scale(1.05);
-    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
-  }
-  
-  .company-card img {
-    border-radius: 50%;
-  }
-    /* Form Styling */
+
+/* Company Search Bar */
+.search-container {
+  display: flex;
+  border: 3px solid #7a1bff;
+  border-radius: 15px;
+  padding: 25px;
+  background-color: #fff;
+  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+  box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.search-container:hover {
+  transform: scale(1.02);
+}
+
+.search-container div input {
+  border: none;
+  outline: none;
+  padding: 18px;
+  font-size: 1.3em;
+  flex: 1;
+  margin-right: 12px;
+  transition: background-color 0.3s ease-in-out;
+}
+
+.search-button {
+  background-color: #7a1bff;
+  color: white;
+  border: none;
+  padding: 18px 10px;
+  cursor: pointer;
+  border-radius: 8px;
+  font-size: 1.3em;
+  transition: background-color 0.3s ease-in-out, transform 0.2s ease-in-out;
+}
+
+.search-button:hover {
+  color: white;
+  background-color: #7a1bff;
+  transform: scale(1.05);
+}
+
+/* Company Cards */
+.company-card {
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+.company-card:hover {
+  transform: scale(1.05);
+  box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.company-card img {
+  border-radius: 50%;
+}
+
+/* Form Styling */
 .card {
   border: 1px solid #ddd;
   border-radius: 10px;
@@ -269,6 +274,7 @@ animation-duration: 1s;
   font-size: 1.1em;
   transition: background-color 0.3s ease-in-out, transform 0.2s ease-in-out;
 }
+
 .btn-outline-primary {
   --bs-btn-color: #6a15e0;
   --bs-btn-border-color: #6a15e0;
@@ -289,18 +295,21 @@ animation-duration: 1s;
   transition: background-color 0.3s ease-in-out, transform 0.2s ease-in-out;
 }
 
-.hero-section .btn-primary:hover,.hero-section .btn-outline-primary:hover{
+.hero-section .btn-primary:hover,
+.hero-section .btn-outline-primary:hover {
   transform: scale(1.05);
 }
-.hero-section .btn-outline-primary{
+
+.hero-section .btn-outline-primary {
   color: white;
 }
 
 
-.color-primary{
+.color-primary {
   color: #7a1bff;
 }
-.color-primary:hover{
+
+.color-primary:hover {
   color: #6a15e0;
 }
 
@@ -320,6 +329,7 @@ animation-duration: 1s;
 .upload-cv-button:hover {
   transform: scale(1.05);
 }
+
 /* Optional: Add hover effects using CSS */
 .search-candidate-card {
   transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -337,5 +347,3 @@ animation-duration: 1s;
 .search-candidate-button:hover {
   transform: scale(1.05);
 }
-
-
