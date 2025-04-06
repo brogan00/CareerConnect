@@ -5,12 +5,17 @@ if (!defined('SECURE_ACCESS')) {
 
 
 if (isset($_SESSION['user_email'])) {
-    $stmt = $conn->prepare("SELECT first_name FROM users WHERE email = ?");
+    $stmt = $conn->prepare("SELECT first_name,last_name,profile_picture FROM users WHERE email = ?");
     $stmt->bind_param("s", $_SESSION['user_email']);
     $stmt->execute();
     $stmt->store_result();
-    $stmt->bind_result($first_name);
+    $stmt->bind_result($first_name,$last_name,$profile_picture);
     $stmt->fetch();
+
+    if($profile_picture==null){
+        $profile_picture = "./assets/images/hamidou.png";
+    }
+    $stmt->close(); 
 }
 ?>
 
@@ -65,8 +70,11 @@ if (isset($_SESSION['user_email'])) {
             echo "
                     <div
                     class='d-flex ms-auto nav-item justify-content-center d-block mt-2 mt-lg-0'>
-                    <li class='nav-link me-1'>
-                        <a class='btn sign-in-btn' href='profile.php'>$first_name</a>
+                    <li class='nav-link'>
+                        <a class='mx-2' href='profile.php'><img src='${profile_picture}' width='50px;'>
+                        <div class='btn sign-in-btn'>${first_name} ${last_name}</div>
+                        </a>
+                        
                     </li>
                     <li class='nav-link me-1'>
                         <a class='btn sign-in-btn' href='connexion/do.logout.php'>Log out</a>

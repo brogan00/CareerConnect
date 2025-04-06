@@ -179,6 +179,7 @@ CREATE TABLE `user` (
   `address` text DEFAULT NULL,
   `phone` varchar(20) DEFAULT NULL,
   `sexe` enum('man','woman') DEFAULT NULL,
+  `about` text DEFAULT NULL,
   `type` enum('candidat','admin') DEFAULT 'candidat',
   `cv` text DEFAULT NULL,
   `status` enum('active','inactive') DEFAULT NULL,
