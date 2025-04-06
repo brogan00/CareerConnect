@@ -91,28 +91,8 @@ $jobs = $stmt->get_result();
                     </form>
                 <?php } ?>
             </div>
+        
 
-
-            <!-- <div class="col-md-9">
-                <div class="card mb-3">
-                    <div class="card-body">
-                        <h5 class="card-title">Software Engineer</h5>
-                        <p class="card-text">Company: TechCorp</p>
-                        <p class="card-text">Location: San Francisco, CA</p>
-                        <p class="card-text">Salary: $90,000 - $120,000</p>
-                        <a href="#" class="btn btn-primary">Apply Now</a>
-                    </div>
-                </div>
-                <div class="card mb-3">
-                    <div class="card-body">
-                        <h5 class="card-title">Data Scientist</h5>
-                        <p class="card-text">Company: DataWorks</p>
-                        <p class="card-text">Location: New York, NY</p>
-                        <p class="card-text">Salary: $80,000 - $110,000</p>
-                        <a href="#" class="btn btn-primary">Apply Now</a>
-                    </div>
-                </div>
-            </div> -->
         </div>
     </div>
 

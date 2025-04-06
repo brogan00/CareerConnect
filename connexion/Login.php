@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-if (isset($_SESSION['token'])) {
+if (isset($_SESSION['user_email'])) {
   header("Location: ../index.php");
 }
 ?>
@@ -114,7 +114,7 @@ if (isset($_SESSION['token'])) {
             error.removeClass('d-none').html(data.error);
             return;
           }
-          localStorage.setItem('token', data.token);
+          //localStorage.setItem('token', data.token);
           if (document.referrer) {
             location.href = document.referrer;
           } else {

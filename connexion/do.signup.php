@@ -17,12 +17,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         echo json_encode(['error' => "This email already exist"]);
     } else {
         $token = password_hash(session_id(), PASSWORD_DEFAULT);
-        $stmt = $conn->prepare("INSERT INTO users (first_name, last_name, email, password,token) VALUES (?, ?, ?, ?,?)");
-        $stmt->bind_param("sssss", $first_name, $last_name, $email, $password, $token);
+        $stmt = $conn->prepare("INSERT INTO users (first_name, last_name, email, password) VALUES (?, ?, ?, ?)");
+        $stmt->bind_param("ssss", $first_name, $last_name, $email, $password);
 
         if ($stmt->execute()) {
-            $_SESSION['token'] = $token;
-            echo json_encode(['token' => "$token"]);
+            $_SESSION['user_email']=$email;
+            //echo json_encode(['token' => "$token"]);
+            echo json_encode(['success' => "Account created successfully"]);
         } else {
             echo json_encode(['error' => "Server Error"]);
         }

@@ -14,12 +14,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $stmt->fetch();
 
     if ($stmt->num_rows > 0 && password_verify($password, $hashed_password)) {
-        $token = password_hash(session_id(), PASSWORD_DEFAULT);
-        $_SESSION['token'] = $token;
-        $stmt = $conn->prepare("UPDATE users SET token = ? WHERE email = ?");
-        $stmt->bind_param("ss", $token, $email);
-        $stmt->execute();
-        echo json_encode(['token' => "$token"]);
+        //$token = password_hash(session_id(), PASSWORD_DEFAULT);
+        $_SESSION['user_email'] = $email;
+        //$stmt = $conn->prepare("UPDATE users SET token = ? WHERE email = ?");
+        //$stmt->bind_param("ss", $token, $email);
+        //$stmt->execute();
+        //echo json_encode(['token' => "$token"]);
+        echo json_encode(['success' => "Login successful"]);
     } else {
         echo json_encode(['error' => "Invalid Email and/Or password"]);
     }

@@ -4,9 +4,9 @@ if (!defined('SECURE_ACCESS')) {
 }
 
 
-if (isset($_SESSION['token'])) {
-    $stmt = $conn->prepare("SELECT first_name FROM users WHERE token = ?");
-    $stmt->bind_param("s", $_SESSION['token']);
+if (isset($_SESSION['user_email'])) {
+    $stmt = $conn->prepare("SELECT first_name FROM users WHERE email = ?");
+    $stmt->bind_param("s", $_SESSION['user_email']);
     $stmt->execute();
     $stmt->store_result();
     $stmt->bind_result($first_name);
@@ -61,7 +61,7 @@ if (isset($_SESSION['token'])) {
             </li>
         </ul>
         <?php
-        if (isset($_SESSION['token'])) {
+        if (isset($_SESSION['user_email'])) {
             echo "
                     <div
                     class='d-flex ms-auto nav-item justify-content-center d-block mt-2 mt-lg-0'>
