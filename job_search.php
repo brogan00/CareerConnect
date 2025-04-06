@@ -3,7 +3,7 @@ include "connexion/config.php";
 define('SECURE_ACCESS', true);
 session_start();
 
-$stmt = $conn->prepare("SELECT * FROM post LIMIT 10");
+$stmt = $conn->prepare("SELECT * FROM job LIMIT 10");
 $stmt->execute();
 $jobs = $stmt->get_result();
 ?>
