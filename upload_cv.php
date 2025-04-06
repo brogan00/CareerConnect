@@ -94,16 +94,42 @@ session_start();
                 </div>
             </div>
 
-            <!-- Skills -->
+        <!-- Skills -->
             <div class="card mb-4">
-                <div class="card-body">
-                    <h5 class="card-title">Skills</h5>
-                    <div class="mb-3">
-                        <label for="skills" class="form-label">Add Skills</label>
-                        <input type="text" class="form-control" id="skills" placeholder="e.g., JavaScript, Python, Project Management">
-                    </div>
+            <div class="card-body">
+                <h5 class="card-title">Skills</h5>
+                <div class="mb-3">
+                <label for="skills" class="form-label">Add Skills</label>
+                <input id="skills" name="skills" placeholder="Start typing..." class="form-control">
                 </div>
             </div>
+            </div>
+
+            <!-- Tagify JS and CSS (from CDN) -->
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.css">
+            <script src="https://cdn.jsdelivr.net/npm/@yaireo/tagify"></script>
+
+            <script>
+            const input = document.querySelector('#skills');
+            const skillsList = [
+                "JavaScript", "Python", "HTML", "CSS", "PHP", "Laravel", "Node.js", "React", "Vue.js", "Angular",
+                "Java", "Spring Boot", "C#", ".NET", "SQL", "MySQL", "PostgreSQL", "MongoDB", "Firebase",
+                "Git", "GitHub", "Docker", "Kubernetes", "AWS", "Azure", "Google Cloud", "DevOps",
+                "Agile", "Scrum", "UI/UX", "Figma", "Photoshop", "Illustrator", "SEO", "Data Analysis",
+                "Machine Learning", "AI", "TensorFlow", "Pandas", "NumPy", "C++", "Rust", "Go",
+                "Shell Scripting", "TypeScript", "Excel", "WordPress", "JIRA", "Customer Service",
+                "Marketing", "Public Speaking", "Project Management", "Business Analysis"
+            ];
+
+            new Tagify(input, {
+                whitelist: skillsList,
+                dropdown: {
+                enabled: 1,
+                maxItems: 20
+                }
+            });
+            </script>
+
 
             <!-- Upload CV -->
             <div class="card mb-4">
@@ -122,6 +148,86 @@ session_start();
             </div>
         </form>
     </div>
+    <script>
+    const input = document.getElementById('skill-input');
+    const container = document.getElementById('skills-container');
+    const hiddenInput = document.getElementById('skills-hidden');
+    const autocompleteList = document.getElementById('autocomplete-list');
+
+    let skills = [];
+
+    input.addEventListener('input', function () {
+        const query = this.value.toLowerCase();
+        autocompleteList.innerHTML = '';
+
+        if (query) {
+            const matches = availableSkills.filter(skill => skill.toLowerCase().startsWith(query) && !skills.includes(skill));
+            matches.forEach(skill => {
+                const item = document.createElement('div');
+                item.className = 'list-group-item list-group-item-action';
+                item.textContent = skill;
+                item.onclick = () => {
+                    addSkill(skill);
+                    input.value = '';
+                    autocompleteList.innerHTML = '';
+                };
+                autocompleteList.appendChild(item);
+            });
+        }
+    });
+
+    input.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && input.value.trim()) {
+            e.preventDefault();
+            addSkill(input.value.trim());
+            input.value = '';
+            autocompleteList.innerHTML = '';
+        }
+    });
+
+    function addSkill(skill) {
+        if (!skills.includes(skill)) {
+            skills.push(skill);
+            updateSkillsDisplay();
+            updateHiddenInput();
+        }
+    }
+
+    function removeSkill(skill) {
+        skills = skills.filter(s => s !== skill);
+        updateSkillsDisplay();
+        updateHiddenInput();
+    }
+
+    function updateSkillsDisplay() {
+        container.innerHTML = '';
+        skills.forEach(skill => {
+            const badge = document.createElement('span');
+            badge.className = 'badge bg-primary me-2 mb-2 p-2';
+            badge.textContent = skill;
+
+            const removeBtn = document.createElement('span');
+            removeBtn.className = 'ms-2 text-white';
+            removeBtn.style.cursor = 'pointer';
+            removeBtn.innerHTML = '&times;';
+            removeBtn.onclick = () => removeSkill(skill);
+
+            badge.appendChild(removeBtn);
+            container.appendChild(badge);
+        });
+    }
+
+    function updateHiddenInput() {
+        hiddenInput.value = skills.join(',');
+    }
+
+    // Hide suggestions on click outside
+    document.addEventListener('click', function (e) {
+        if (!autocompleteList.contains(e.target) && e.target !== input) {
+            autocompleteList.innerHTML = '';
+        }
+    });
+</script>
 
     <?php include "templates/footer.php" ?>
 </body>

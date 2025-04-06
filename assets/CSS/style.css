@@ -347,3 +347,13 @@ body {
 .search-candidate-button:hover {
   transform: scale(1.05);
 }
+#skills-container .badge {
+  font-size: 1rem;
+  display: inline-flex;
+  align-items: center;
+}
+#autocomplete-list {
+  width: 100%;
+  max-height: 200px;
+  overflow-y: auto;
+}
