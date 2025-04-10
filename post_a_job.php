@@ -2,7 +2,6 @@
 include "connexion/config.php";
 define('SECURE_ACCESS', true);
 session_start();
-?>
 
 
 <!DOCTYPE html>
@@ -20,7 +19,6 @@ session_start();
 
 <body>
     <!-- Navbar -->
-
     <?php include "templates/header.php" ?>
 
     <!-- Post a Job Form -->
@@ -158,5 +156,4 @@ session_start();
         window.onload = getLocation;
     </script>
 </body>
-
 </html>
