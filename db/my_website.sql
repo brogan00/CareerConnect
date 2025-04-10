@@ -138,7 +138,7 @@ CREATE TABLE `job` (
 -- Table structure for table `recruter`
 --
 
-CREATE TABLE `recruter` (
+CREATE TABLE `recruiter` (
   `id` int(11) NOT NULL,
   `full_name` varchar(255) DEFAULT NULL,
   `email` varchar(255) DEFAULT NULL,
@@ -245,7 +245,7 @@ ALTER TABLE `job`
 --
 -- Indexes for table `recruter`
 --
-ALTER TABLE `recruter`
+ALTER TABLE `recruiter`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `email` (`email`),
   ADD KEY `company_id` (`company_id`);
@@ -313,7 +313,7 @@ ALTER TABLE `job`
 --
 -- AUTO_INCREMENT for table `recruter`
 --
-ALTER TABLE `recruter`
+ALTER TABLE `recruiter`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -368,13 +368,13 @@ ALTER TABLE `experience`
 --
 ALTER TABLE `job`
   ADD CONSTRAINT `job_ibfk_1` FOREIGN KEY (`category_id`) REFERENCES `category` (`id`),
-  ADD CONSTRAINT `job_ibfk_2` FOREIGN KEY (`recruter_id`) REFERENCES `recruter` (`id`);
+  ADD CONSTRAINT `job_ibfk_2` FOREIGN KEY (`recruter_id`) REFERENCES `recruiter` (`id`);
 
 --
 -- Constraints for table `recruter`
 --
-ALTER TABLE `recruter`
-  ADD CONSTRAINT `recruter_ibfk_1` FOREIGN KEY (`company_id`) REFERENCES `company` (`id`);
+ALTER TABLE `recruiter`
+  ADD CONSTRAINT `recruiter_ibfk_1` FOREIGN KEY (`company_id`) REFERENCES `company` (`id`);
 
 --
 -- Constraints for table `skills`
