@@ -78,48 +78,59 @@ if (isset($_SESSION['user_email'])) {
                   <input type="password" name="password" class="form-control" required placeholder="Password">
                 </div>
 
-                <!-- Checkbox -->
-                <div class="form-check d-flex justify-content-center mb-4">
-                  <input class="form-check-input me-2" type="checkbox" value="" id="form2Example33" checked />
-                  <label class="form-check-label" for="form2Example33">
-                    Subscribe to our newsletter
-                  </label>
+                <!-- Radio -->
+                <div class="align-items-center d-flex row">
+                  <div class="col-10 col-sm-4 "> SignUp as :</div>
+
+                  <div class="form-check form-switch col-10 col-sm-4">
+                    <input class="form-check-input" type="radio" name="type" id="Candidat" value="candidat" checked />
+                    <label class="form-check-label" for="Candidat">
+                      Candidat
+                    </label>
+                  </div>
+                  <div class="form-check form-switch col-10 col-sm-4">
+                    <input class="form-check-input" type="radio" name="type" id="Recruiter" value="recruiter" />
+                    <label class="form-check-label" for="Recruiter">
+                      Recruiter
+                    </label>
+                  </div>
                 </div>
-
-                <!-- Submit button -->
-                <button type="submit" data-mdb-button-init data-mdb-ripple-init
-                  class="btn btn-primary btn-block mb-4 w-100">
-                  Sign up
-                </button>
-
-                <!-- Register buttons -->
-                <div class="text-center">
-                  <p>or sign up with:</p>
-                  <button type="button" data-mdb-button-init data-mdb-ripple-init
-                    class="btn btn-link btn-floating mx-1">
-                    <i class="fab fa-facebook-f color-primary"></i>
-                  </button>
-
-                  <button type="button" data-mdb-button-init data-mdb-ripple-init
-                    class="btn btn-link btn-floating mx-1">
-                    <i class="fab fa-google color-primary"></i>
-                  </button>
-
-                  <button type="button" data-mdb-button-init data-mdb-ripple-init
-                    class="btn btn-link btn-floating mx-1">
-                    <i class="fab fa-twitter color-primary"></i>
-                  </button>
-
-                  <button type="button" data-mdb-button-init data-mdb-ripple-init
-                    class="btn btn-link btn-floating mx-1">
-                    <i class="fab fa-github color-primary"></i>
-                  </button>
-                </div>
-              </form>
             </div>
+
+            <!-- Submit button -->
+            <button type="submit" data-mdb-button-init data-mdb-ripple-init
+              class="btn btn-primary btn-block mb-4 w-100">
+              Sign up
+            </button>
+
+            <!-- Register buttons -->
+            <div class="text-center">
+              <p>or sign up with:</p>
+              <button type="button" data-mdb-button-init data-mdb-ripple-init
+                class="btn btn-link btn-floating mx-1">
+                <i class="fab fa-facebook-f color-primary"></i>
+              </button>
+
+              <button type="button" data-mdb-button-init data-mdb-ripple-init
+                class="btn btn-link btn-floating mx-1">
+                <i class="fab fa-google color-primary"></i>
+              </button>
+
+              <button type="button" data-mdb-button-init data-mdb-ripple-init
+                class="btn btn-link btn-floating mx-1">
+                <i class="fab fa-twitter color-primary"></i>
+              </button>
+
+              <button type="button" data-mdb-button-init data-mdb-ripple-init
+                class="btn btn-link btn-floating mx-1">
+                <i class="fab fa-github color-primary"></i>
+              </button>
+            </div>
+            </form>
           </div>
         </div>
       </div>
+    </div>
     </div>
   </section>
   <!-- Section: Design Block -->

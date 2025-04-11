@@ -4,8 +4,8 @@ define('SECURE_ACCESS', true);
 session_start();
 
 if (!isset($_SESSION['user_email'])) {
-    header("Location: login.php");
-    exit();
+  header("Location: login.php");
+  exit();
 }
 
 $email = $_SESSION['user_email'];
@@ -18,12 +18,13 @@ $stmt->fetch();
 $stmt->close();
 
 if (!$profile_picture) {
-    $profile_picture = "./assets/images/hamidou.png";
+  $profile_picture = "./assets/images/hamidou.png";
 }
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <title>My Profile - CareerConnect</title>
@@ -37,15 +38,18 @@ if (!$profile_picture) {
       padding: 30px;
       background-color: #ffffff;
     }
+
     .profile-card img {
       border-radius: 50%;
       width: 130px;
       height: 130px;
       object-fit: cover;
     }
+
     .form-group label {
       font-weight: bold;
     }
+
     .btn-group {
       display: flex;
       gap: 10px;
@@ -54,6 +58,7 @@ if (!$profile_picture) {
     }
   </style>
 </head>
+
 <body>
   <?php include "templates/header.php"; ?>
 
@@ -74,23 +79,23 @@ if (!$profile_picture) {
           <form action="editProfile.php" method="POST" id="profile-form">
             <div class="form-group mt-3">
               <label for="first_name">First Name</label>
-              <input type="text" id="first_name" name="stname" class="form-control" value="<?php echo $first_name;?>" readonly required pattern="[A-Za-z]{2,}">
+              <input type="text" id="first_name" name="stname" class="form-control" value="<?php echo $first_name; ?>" readonly required pattern="[A-Za-z]{2,}">
             </div>
             <div class="form-group">
               <label for="last_name">Last Name</label>
-              <input type="text" id="last_name" name="ltname" class="form-control" value="<?php echo $last_name;?>" readonly required pattern="[A-Za-z]{2,}">
+              <input type="text" id="last_name" name="ltname" class="form-control" value="<?php echo $last_name; ?>" readonly required pattern="[A-Za-z]{2,}">
             </div>
             <div class="form-group">
               <label for="email">Email</label>
-              <input type="email" id="email" name="email" class="form-control" value="<?php echo $_SESSION["user_email"];?>" readonly required>
+              <input type="email" id="email" name="email" class="form-control" value="<?php echo $_SESSION["user_email"]; ?>" readonly required>
             </div>
             <div class="form-group">
               <label for="phone">Phone</label>
-              <input type="tel" id="phone" name="phone" class="form-control" value="<?php echo $phone;?>" readonly required pattern="[0-9]{8,15}">
+              <input type="tel" id="phone" name="phone" class="form-control" value="<?php echo $phone; ?>" readonly required pattern="[0-9]{8,15}">
             </div>
             <div class="form-group">
               <label for="address">Address</label>
-              <input type="text" id="address" name="address" class="form-control" value="<?php echo $address;?>" readonly required>
+              <input type="text" id="address" name="address" class="form-control" value="<?php echo $address; ?>" readonly required>
             </div>
             <div class="form-group">
               <label>Gender</label><br>
@@ -110,42 +115,42 @@ if (!$profile_picture) {
           </form>
 
           <!-- Change Password -->
-<hr class="my-4">
-<h4>Change Password</h4>
-<form action="editPassword.php" method="POST" id="password-form">
-  <div class="form-group">
-    <label for="old-password">Old Password</label>
-    <input type="password" id="old-password" name="old_password" class="form-control" required placeholder="Enter old password">
-  </div>
-  <div class="form-group">
-    <label for="new-password">New Password</label>
-    <input type="password" id="new-password" name="new_password" class="form-control" required minlength="6" placeholder="At least 6 characters">
-  </div>
-  <div class="form-group">
-    <label for="confirm-password">Confirm New Password</label>
-    <input type="password" id="confirm-password" class="form-control" required placeholder="Re-enter new password">
-  </div>
-  <div class="form-group mt-2">
-    <button type="submit" class="btn btn-warning btn-block">Update Password</button>
-  </div>
-</form>
+          <hr class="my-4">
+          <h4>Change Password</h4>
+          <form action="editPassword.php" method="POST" id="password-form">
+            <div class="form-group">
+              <label for="old-password">Old Password</label>
+              <input type="password" id="old-password" name="old_password" class="form-control" required placeholder="Enter old password">
+            </div>
+            <div class="form-group">
+              <label for="new-password">New Password</label>
+              <input type="password" id="new-password" name="new_password" class="form-control" required minlength="6" placeholder="At least 6 characters">
+            </div>
+            <div class="form-group">
+              <label for="confirm-password">Confirm New Password</label>
+              <input type="password" id="confirm-password" class="form-control" required placeholder="Re-enter new password">
+            </div>
+            <div class="form-group mt-2">
+              <button type="submit" class="btn btn-warning btn-block">Update Password</button>
+            </div>
+          </form>
 
 
 
-<script>
-  document.getElementById("password-form").addEventListener("submit", function(e) {
-    const newPassword = document.getElementById("new-password").value;
-    const confirmPassword = document.getElementById("confirm-password").value;
+          <script>
+            document.getElementById("password-form").addEventListener("submit", function(e) {
+              const newPassword = document.getElementById("new-password").value;
+              const confirmPassword = document.getElementById("confirm-password").value;
 
-    if (newPassword !== confirmPassword) {
-      e.preventDefault();
-      alert("New passwords do not match.");
-    } else if (newPassword.length < 6) {
-      e.preventDefault();
-      alert("New password must be at least 6 characters long.");
-    }
-  });
-</script>
+              if (newPassword !== confirmPassword) {
+                e.preventDefault();
+                alert("New passwords do not match.");
+              } else if (newPassword.length < 6) {
+                e.preventDefault();
+                alert("New password must be at least 6 characters long.");
+              }
+            });
+          </script>
 
 
           <!-- Buttons -->
@@ -177,4 +182,5 @@ if (!$profile_picture) {
 
   <?php include "templates/footer.php"; ?>
 </body>
+
 </html>

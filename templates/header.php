@@ -4,8 +4,8 @@ if (!defined('SECURE_ACCESS')) {
 }
 
 if (isset($_SESSION['user_email'])) {
-    $stmt = $conn->prepare("SELECT first_name, last_name, profile_picture FROM users WHERE email = ?");
-    $stmt->bind_param("s", $_SESSION['user_email']);
+    $stmt = $conn->prepare("SELECT first_name, last_name, profile_picture FROM users WHERE email = ? UNION SELECT first_name, last_name, profile_picture FROM recruiter WHERE email = ? ");
+    $stmt->bind_param("ss", $_SESSION['user_email'], $_SESSION['user_email']);
     $stmt->execute();
     $stmt->store_result();
     $stmt->bind_result($first_name, $last_name, $profile_picture);

@@ -10,7 +10,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $stmt->bind_param("s", $email);
     $stmt->execute();
     $stmt->store_result();
-    $stmt->bind_result($hashed_password,$type);
+    $stmt->bind_result($hashed_password, $type);
     $stmt->fetch();
 
     if ($stmt->num_rows > 0 && password_verify($password, $hashed_password)) {
@@ -18,15 +18,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $_SESSION['user_email'] = $email;
         $_SESSION['user_type'] = $type;
 
+
         //$stmt = $conn->prepare("UPDATE users SET token = ? WHERE email = ?");
         //$stmt->bind_param("ss", $token, $email);
         //$stmt->execute();
         //echo json_encode(['token' => "$token"]);
         echo json_encode(['success' => "Login successful"]);
     } else {
-        echo json_encode(['error' => "Invalid Email and/Or password"]);
+        $stmt = $conn->prepare("SELECT password FROM recruiter WHERE email = ?");
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        $stmt->store_result();
+        $stmt->bind_result($hashed_password);
+        $stmt->fetch();
+        if ($stmt->num_rows > 0 && password_verify($password, $hashed_password)) {
+            $_SESSION['user_email'] = $email;
+            $_SESSION['user_type'] = "recruiter";
+            echo json_encode(['success' => "Login successful"]);
+        } else {
+            echo json_encode(['error' => "Invalid Email and/Or password"]);
+        }
     }
-
     $stmt->close();
     $conn->close();
 }
