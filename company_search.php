@@ -83,6 +83,8 @@ session_start();
     </div>
 
     <?php include "templates/footer.php" ?>
+    <script src="assets/JS/bootstrap.min.js"></script>
+    <script src="assets/icons/all.min.js"></script>
 </body>
 
 </html>

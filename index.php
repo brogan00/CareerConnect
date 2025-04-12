@@ -159,7 +159,9 @@ session_start();
     </div>
   </div>
 
-  <?php include("templates/footer.php"); ?>
+  <?php include "templates/footer.php" ?>
+  <script src="assets/JS/bootstrap.min.js"></script>
+    <script src="assets/icons/all.min.js"></script>
 
   <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.js"></script> -->
 </body>
