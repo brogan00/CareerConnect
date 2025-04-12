@@ -56,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt->execute();
     
     $_SESSION['success'] = "CV $action successfully";
-    header("Location: approve_cvs.php");
+    header("Location: admin/approve_cvs.php");
     exit();
 }
 

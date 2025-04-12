@@ -1,6 +1,4 @@
 <?php
-
-
 // admin_dashboard.php
 include "connexion/config.php";
 define('SECURE_ACCESS', true);
@@ -292,11 +290,21 @@ if (!isset($_SESSION['user_email']) || $_SESSION['user_type'] !== 'admin') {
           <div class="tab-pane fade" id="manage-candidates">
             <div class="d-flex justify-content-between align-items-center mb-4">
               <h2 class="h3 mb-0">Manage Candidates</h2>
-              <div class="input-group" style="width: 300px;">
-                <input type="text" id="candidateSearch" class="form-control" placeholder="Search candidates...">
-                <button class="btn btn-outline-secondary" type="button" id="searchCandidateButton">
-                  <i class="fas fa-search"></i>
-                </button>
+              <div>
+                <div class="input-group" style="width: 300px;">
+                  <input type="text" id="candidateSearch" class="form-control" placeholder="Search candidates...">
+                  <button class="btn btn-outline-secondary" type="button" id="searchCandidateButton">
+                    <i class="fas fa-search"></i>
+                  </button>
+                </div>
+                <div class="mt-2">
+                  <button class="btn btn-sm btn-outline-warning" onclick="filterCandidates('cv_pending')">
+                    <i class="fas fa-file-upload"></i> Pending CVs
+                  </button>
+                  <button class="btn btn-sm btn-outline-secondary" onclick="filterCandidates('all')">
+                    <i class="fas fa-users"></i> All Candidates
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -311,6 +319,7 @@ if (!isset($_SESSION['user_email']) || $_SESSION['user_type'] !== 'admin') {
                         <th>Email</th>
                         <th>Phone</th>
                         <th>CV</th>
+                        <th>CV Status</th>
                         <th>Status</th>
                         <th>Joined</th>
                         <th>Actions</th>
@@ -321,6 +330,7 @@ if (!isset($_SESSION['user_email']) || $_SESSION['user_type'] !== 'admin') {
                       $candidates = $conn->query("SELECT * FROM users WHERE type = 'candidat' ORDER BY created_at DESC");
 
                       while ($candidate = $candidates->fetch_assoc()):
+                        $cv_status = $candidate['cv_status'] ?? 'pending';
                       ?>
                         <tr>
                           <td><?php echo $candidate['id']; ?></td>
@@ -337,12 +347,31 @@ if (!isset($_SESSION['user_email']) || $_SESSION['user_type'] !== 'admin') {
                             <?php endif; ?>
                           </td>
                           <td>
+                            <span class="badge bg-<?php 
+                              echo $cv_status == 'approved' ? 'success' : 
+                                   ($cv_status == 'rejected' ? 'danger' : 'warning'); ?>">
+                              <?php echo ucfirst($cv_status); ?>
+                            </span>
+                          </td>
+                          <td>
                             <span class="badge bg-<?php echo $candidate['status'] == 'active' ? 'success' : 'secondary'; ?>">
                               <?php echo ucfirst($candidate['status']); ?>
                             </span>
                           </td>
                           <td><?php echo date('M d, Y', strtotime($candidate['created_at'])); ?></td>
                           <td>
+                            <?php if ($candidate['cv']): ?>
+                              <button onclick="approveCV(<?php echo $candidate['id']; ?>)" 
+                                      class="btn btn-sm btn-success" 
+                                      <?php echo $cv_status == 'approved' ? 'disabled' : ''; ?>>
+                                <i class="fas fa-check"></i> Approve CV
+                              </button>
+                              <button onclick="rejectCV(<?php echo $candidate['id']; ?>)" 
+                                      class="btn btn-sm btn-danger" 
+                                      <?php echo $cv_status == 'rejected' ? 'disabled' : ''; ?>>
+                                <i class="fas fa-times"></i> Reject CV
+                              </button>
+                            <?php endif; ?>
                             <button onclick="toggleCandidateStatus(<?php echo $candidate['id']; ?>, '<?php echo $candidate['status']; ?>')"
                               class="btn btn-sm btn-<?php echo $candidate['status'] == 'active' ? 'warning' : 'success'; ?>">
                               <i class="fas fa-<?php echo $candidate['status'] == 'active' ? 'ban' : 'check'; ?>"></i>
@@ -482,8 +511,6 @@ if (!isset($_SESSION['user_email']) || $_SESSION['user_type'] !== 'admin') {
     </div>
   </div>
 
-  <!--<script src="assets/JS/bootstrap.bundle.min.js"></script>
-  <script src="assets/JS/jquery-3.6.0.min.js"></script> -->
   <script src="assets/JS/jquery-3.7.1.js"></script>
   <script src="assets/JS/bootstrap.min.js"></script>
   <script src="assets/icons/all.min.js"></script>
@@ -589,6 +616,52 @@ if (!isset($_SESSION['user_email']) || $_SESSION['user_type'] !== 'admin') {
             alert("Error: " + data.message);
           }
         }, "json");
+      }
+    }
+
+    // Approve CV
+    function approveCV(userId) {
+      if (confirm("Are you sure you want to approve this CV?")) {
+        $.post("admin_actions.php", {
+          action: "approve_cv",
+          user_id: userId
+        }, function(data) {
+          if (data.success) {
+            alert("CV approved successfully!");
+            location.reload();
+          } else {
+            alert("Error: " + data.message);
+          }
+        }, "json");
+      }
+    }
+
+    // Reject CV
+    function rejectCV(userId) {
+      if (confirm("Are you sure you want to reject this CV?")) {
+        $.post("admin_actions.php", {
+          action: "reject_cv",
+          user_id: userId
+        }, function(data) {
+          if (data.success) {
+            alert("CV rejected successfully!");
+            location.reload();
+          } else {
+            alert("Error: " + data.message);
+          }
+        }, "json");
+      }
+    }
+
+    // Filter Candidates
+    function filterCandidates(filter) {
+      if (filter === 'cv_pending') {
+        $("#manage-candidates table tbody tr").each(function() {
+          const cvStatus = $(this).find("td:nth-child(6) span").text().toLowerCase();
+          $(this).toggle(cvStatus === 'pending');
+        });
+      } else {
+        $("#manage-candidates table tbody tr").show();
       }
     }
 
