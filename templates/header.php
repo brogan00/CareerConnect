@@ -52,7 +52,73 @@ if (isset($_SESSION['user_email'])) {
                 </a>
             </li>
         </ul>
+                    <li class="nav-item dropdown">
+                <a class="nav-link position-relative" href="#" id="notificationDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-bell-fill"></i>
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notificationCount">0</span>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationDropdown" id="notificationList">
+                    <li><h6 class="dropdown-header">Notifications</h6></li>
+                    <li><a class="dropdown-item" href="#">No new notifications</a></li>
+                </ul>
+            </li>
 
+            <script>
+            // Load notifications
+            function loadNotifications() {
+                fetch('get_notifications.php')
+                    .then(response => response.json())
+                    .then(data => {
+                        const list = document.getElementById('notificationList');
+                        const count = document.getElementById('notificationCount');
+                        
+                        // Clear existing items except header
+                        while (list.children.length > 1) {
+                            list.removeChild(list.lastChild);
+                        }
+                        
+                        if (data.error) {
+                            const item = document.createElement('li');
+                            item.innerHTML = `<a class="dropdown-item text-danger" href="#">${data.error}</a>`;
+                            list.appendChild(item);
+                        } else if (data.length === 0) {
+                            const item = document.createElement('li');
+                            item.innerHTML = '<a class="dropdown-item" href="#">No new notifications</a>';
+                            list.appendChild(item);
+                            count.style.display = 'none';
+                        } else {
+                            count.textContent = data.filter(n => !n.is_read).length;
+                            count.style.display = data.filter(n => !n.is_read).length > 0 ? 'block' : 'none';
+                            
+                            data.forEach(notification => {
+                                const item = document.createElement('li');
+                                const className = notification.is_read ? '' : 'fw-bold';
+                                item.innerHTML = `
+                                    <a class="dropdown-item ${className}" href="#">
+                                        <div>${notification.message}</div>
+                                        <small class="text-muted">${new Date(notification.created_at).toLocaleString()}</small>
+                                    </a>`;
+                                list.appendChild(item);
+                            });
+                            
+                            const divider = document.createElement('li');
+                            divider.innerHTML = '<hr class="dropdown-divider">';
+                            list.appendChild(divider);
+                            
+                            const viewAll = document.createElement('li');
+                            viewAll.innerHTML = '<a class="dropdown-item text-center" href="notifications.php">View All</a>';
+                            list.appendChild(viewAll);
+                        }
+                    });
+            }
+
+            // Load notifications on page load
+            document.addEventListener('DOMContentLoaded', loadNotifications);
+
+            // Refresh notifications every 30 seconds
+            setInterval(loadNotifications, 30000);
+            </script>
+                    <?php endif; ?>
         <?php if (isset($_SESSION['user_email'])): ?>
             <div class="d-flex ms-auto align-items-center mt-2 mt-lg-0">
                 <a href="profile.php" class="d-flex align-items-center text-decoration-none me-3">
@@ -66,6 +132,6 @@ if (isset($_SESSION['user_email'])) {
                 <a class="btn sign-in-btn me-2" href="connexion/signup.php">Sign Up</a>
                 <a class="btn sign-in-btn" href="connexion/login.php">Login</a>
             </div>
-        <?php endif; ?>
+            
     </div>
 </div>
