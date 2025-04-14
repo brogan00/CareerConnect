@@ -76,51 +76,204 @@ session_start();
     </form>
   </div>
 
-  <!-- Featured Jobs Section (Modernized) -->
-  <div class="container mt-5">
+<!-- Featured Jobs Section with Sliding Animation -->
+<div class="container mt-5">
     <h2 class="text-center mb-4">Featured Jobs</h2>
-    <div class="row">
-      <!-- Job 1 -->
-      <div class="col-md-4 mb-4">
-        <div class="card job-card animate__animated animate__fadeInUp">
-          <div class="card-body">
-            <h5 class="card-title">Software Engineer</h5>
-            <p class="card-text">Company: TechCorp</p>
-            <p class="card-text">Location: San Francisco, CA</p>
-            <p class="card-text">Salary: $90,000 - $120,000</p>
-            <a href="#" class="btn btn-primary">Apply Now</a>
-          </div>
-        </div>
-      </div>
+    <div class="job-slider-container">
+        <div class="job-slider-track" id="jobSliderTrack">
+            <!-- Job 1 -->
+            <div class="job-slide">
+                <div class="card job-card">
+                    <div class="card-body">
+                        <h5 class="card-title">Ingénieur Civil</h5>
+                        <p class="card-text"><i class="fas fa-building"></i> Société: Cosider</p>
+                        <p class="card-text"><i class="fas fa-map-marker-alt"></i> Localisation: Tizi Ouzou, Algérie</p>
+                        <p class="card-text"><i class="fas fa-money-bill-wave"></i> Salaire: 120,000 - 180,000 DA/mois</p>
+                        <div class="skills-tags mt-3">
+                            <span class="badge bg-primary">AutoCAD</span>
+                            <span class="badge bg-primary">BTP</span>
+                            <span class="badge bg-primary">Gestion de projet</span>
+                        </div>
+                        <a href="#" class="btn btn-primary mt-3">Postuler Maintenant</a>
+                    </div>
+                </div>
+            </div>
 
-      <!-- Job 2 -->
-      <div class="col-md-4 mb-4">
-        <div class="card job-card animate__animated animate__fadeInUp animate__delay-1s">
-          <div class="card-body">
-            <h5 class="card-title">Data Scientist</h5>
-            <p class="card-text">Company: DataWorks</p>
-            <p class="card-text">Location: New York, NY</p>
-            <p class="card-text">Salary: $80,000 - $110,000</p>
-            <a href="#" class="btn btn-primary">Apply Now</a>
-          </div>
-        </div>
-      </div>
+            <!-- Job 2 -->
+            <div class="job-slide">
+                <div class="card job-card">
+                    <div class="card-body">
+                        <h5 class="card-title">Comptable</h5>
+                        <p class="card-text"><i class="fas fa-building"></i> Société: Sonatrach</p>
+                        <p class="card-text"><i class="fas fa-map-marker-alt"></i> Localisation: Hassi Messaoud, Algérie</p>
+                        <p class="card-text"><i class="fas fa-money-bill-wave"></i> Salaire: 70,000 - 100,000 DA/mois</p>
+                        <div class="skills-tags mt-3">
+                            <span class="badge bg-primary">Comptabilité</span>
+                            <span class="badge bg-primary">Fiscalité</span>
+                            <span class="badge bg-primary">Sage</span>
+                        </div>
+                        <a href="#" class="btn btn-primary mt-3">Postuler Maintenant</a>
+                    </div>
+                </div>
+            </div>
 
-      <!-- Job 3 -->
-      <div class="col-md-4 mb-4">
-        <div class="card job-card animate__animated animate__fadeInUp animate__delay-2s">
-          <div class="card-body">
-            <h5 class="card-title">Product Manager</h5>
-            <p class="card-text">Company: Innovate Inc.</p>
-            <p class="card-text">Location: Chicago, IL</p>
-            <p class="card-text">Salary: $100,000 - $130,000</p>
-            <a href="#" class="btn btn-primary">Apply Now</a>
-          </div>
+            <!-- Job 3 -->
+            <div class="job-slide">
+                <div class="card job-card">
+                    <div class="card-body">
+                        <h5 class="card-title">Médecin Généraliste</h5>
+                        <p class="card-text"><i class="fas fa-building"></i> Société: EPH Boufarik</p>
+                        <p class="card-text"><i class="fas fa-map-marker-alt"></i> Localisation: Blida, Algérie</p>
+                        <p class="card-text"><i class="fas fa-money-bill-wave"></i> Salaire: 150,000 - 250,000 DA/mois</p>
+                        <div class="skills-tags mt-3">
+                            <span class="badge bg-primary">Médecine</span>
+                            <span class="badge bg-primary">Urgences</span>
+                            <span class="badge bg-primary">Diagnostic</span>
+                        </div>
+                        <a href="#" class="btn btn-primary mt-3">Postuler Maintenant</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Job 4 -->
+            <div class="job-slide">
+                <div class="card job-card">
+                    <div class="card-body">
+                        <h5 class="card-title">Enseignant de Français</h5>
+                        <p class="card-text"><i class="fas fa-building"></i> Société: Lycée Ibn Khaldoun</p>
+                        <p class="card-text"><i class="fas fa-map-marker-alt"></i> Localisation: Béjaïa, Algérie</p>
+                        <p class="card-text"><i class="fas fa-money-bill-wave"></i> Salaire: 60,000 - 90,000 DA/mois</p>
+                        <div class="skills-tags mt-3">
+                            <span class="badge bg-primary">Pédagogie</span>
+                            <span class="badge bg-primary">Littérature</span>
+                            <span class="badge bg-primary">Education</span>
+                        </div>
+                        <a href="#" class="btn btn-primary mt-3">Postuler Maintenant</a>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
+    <div class="slider-controls text-center mt-3">
+        <button class="btn btn-sm btn-outline-primary me-2" id="prevJob"><i class="fas fa-chevron-left"></i></button>
+        <button class="btn btn-sm btn-outline-primary" id="nextJob"><i class="fas fa-chevron-right"></i></button>
+    </div>
+</div>
 
+<style>
+    .job-slider-container {
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .job-slider-track {
+        display: flex;
+        transition: transform 0.5s ease;
+        gap: 20px;
+    }
+    
+    .job-slide {
+        min-width: calc(33.333% - 14px);
+        flex: 0 0 auto;
+    }
+    
+    .job-card {
+        border: none;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        height: 100%;
+        transition: all 0.3s ease;
+    }
+    
+    .job-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    }
+    
+    @media (max-width: 992px) {
+        .job-slide {
+            min-width: calc(50% - 10px);
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .job-slide {
+            min-width: 100%;
+        }
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const track = document.getElementById('jobSliderTrack');
+    const slides = document.querySelectorAll('.job-slide');
+    const prevBtn = document.getElementById('prevJob');
+    const nextBtn = document.getElementById('nextJob');
+    const slideWidth = slides[0].offsetWidth + 20; // including gap
+    let currentPosition = 0;
+    let autoSlideInterval;
+    
+    function moveToSlide(position) {
+        track.style.transform = `translateX(-${position}px)`;
+        currentPosition = position;
+    }
+    
+    function nextSlide() {
+        const maxPosition = (slides.length - 3) * slideWidth;
+        if (currentPosition < maxPosition) {
+            moveToSlide(currentPosition + slideWidth);
+        } else {
+            moveToSlide(0);
+        }
+    }
+    
+    function prevSlide() {
+        if (currentPosition > 0) {
+            moveToSlide(currentPosition - slideWidth);
+        } else {
+            const maxPosition = (slides.length - 3) * slideWidth;
+            moveToSlide(maxPosition);
+        }
+    }
+    
+    function startAutoSlide() {
+        autoSlideInterval = setInterval(nextSlide, 3000);
+    }
+    
+    function stopAutoSlide() {
+        clearInterval(autoSlideInterval);
+    }
+    
+    // Initialize
+    startAutoSlide();
+    
+    // Event listeners
+    nextBtn.addEventListener('click', function() {
+        stopAutoSlide();
+        nextSlide();
+        startAutoSlide();
+    });
+    
+    prevBtn.addEventListener('click', function() {
+        stopAutoSlide();
+        prevSlide();
+        startAutoSlide();
+    });
+    
+    // Pause on hover
+    track.addEventListener('mouseenter', stopAutoSlide);
+    track.addEventListener('mouseleave', startAutoSlide);
+    
+    // Responsive adjustments
+    window.addEventListener('resize', function() {
+        const newSlideWidth = slides[0].offsetWidth + 20;
+        if (newSlideWidth !== slideWidth) {
+            slideWidth = newSlideWidth;
+            moveToSlide(currentPosition);
+        }
+    });
+});
+</script>
   <!-- Upload CV Section - Card Style -->
   <div class="bg-light py-5">
     <div class="container">
