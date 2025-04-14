@@ -4,9 +4,16 @@ define('SECURE_ACCESS', true);
 session_start();
 
 // Check if user is logged in and is a recruiter
-if (!isset($_SESSION['user_id']) || $_SESSION['type'] !== 'recruiter') {
-    header("Location: login.php");
+if (!isset($_SESSION['user_email'])) {
+    header("Location: connexion/login.php");
     exit();
+}
+if (!isset($_SESSION['user_type'])) {
+    if($_SESSION['user_type'] !== 'recruiter') {
+        echo "<script>alert('You do not have permission to access this page.');</script>";
+        header("Location: index.php");
+        exit();
+    }
 }
 
 // Process form submission

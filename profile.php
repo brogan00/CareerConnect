@@ -8,20 +8,44 @@ if (!isset($_SESSION['user_email'])) {
   exit();
 }
 
+
+if (isset($_SESSION['user_email'])) {
+  if (isset($_SESSION['user_type'])) {
+    if ($_SESSION['user_type'] == "recruiter") {  
+      $stmt = $conn->prepare("SELECT first_name, last_name, address, profile_picture , company_id FROM recruiter WHERE email = ?");
+    } else if ($_SESSION['user_type'] == "candidat" || $_SESSION['user_type'] == "admin") {
+      $stmt = $conn->prepare("SELECT first_name, last_name, address, phone, cv, sexe, about, profile_picture FROM users WHERE email = ?");
+    } else {
+      die('Invalid user type!');
+    }
+  }
+}
+
 $email = $_SESSION['user_email'];
-$query = "SELECT first_name, last_name, address, phone, cv, sexe, about, profile_picture FROM users WHERE email = ?";
-$stmt = $conn->prepare($query);
 $stmt->bind_param("s", $email);
 $stmt->execute();
-$stmt->bind_result($first_name, $last_name, $address, $phone, $cv, $sexe, $about, $profile_picture);
+if ($_SESSION['user_type'] == "recruiter") {  
+  $stmt->bind_result($first_name, $last_name, $address, $profile_picture, $company_id);
+} else if ($_SESSION['user_type'] == "candidat" || $_SESSION['user_type'] == "admin") {
+  $stmt->bind_result($first_name, $last_name, $address, $phone, $cv, $sexe, $about, $profile_picture);
+}
+$stmt->store_result();
 $stmt->fetch();
+if ($_SESSION['user_type'] == "recruiter") {  
+  if($company_id != null){
+    $stmt = $conn->prepare("SELECT name FROM company WHERE id = ?");
+    $stmt->bind_param("i", $company_id);
+    $stmt->execute();
+    $stmt->bind_result($company_name);
+    $stmt->fetch();
+}
+}
 $stmt->close();
 
 if (!$profile_picture) {
   $profile_picture = "./assets/images/hamidou.png";
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -90,12 +114,23 @@ if (!$profile_picture) {
               <input type="email" id="email" name="email" class="form-control" value="<?php echo $_SESSION["user_email"]; ?>" readonly required>
             </div>
             <div class="form-group">
-              <label for="phone">Phone</label>
-              <input type="tel" id="phone" name="phone" class="form-control" value="<?php echo $phone; ?>" readonly required pattern="[0-9]{8,15}">
-            </div>
-            <div class="form-group">
               <label for="address">Address</label>
               <input type="text" id="address" name="address" class="form-control" value="<?php echo $address; ?>" readonly required>
+            </div>
+
+            <?php 
+if ($_SESSION['user_type'] == "recruiter") {
+  ?> 
+            <div class="form-group">
+              <label for="company">company</label>
+              <input type="text" id="company" name="company" class="form-control" value="<?php echo $company_name; ?>" readonly required>
+            </div>  
+  <?php
+}elseif ($_SESSION['user_type'] == "candidat" || $_SESSION['user_type'] == "admin") {
+  ?>
+            <div class="form-group">
+              <label for="phone">Phone</label>
+              <input type="tel" id="phone" name="phone" class="form-control" value="<?php echo $phone; ?>" readonly required pattern="[0-9]{8,15}">
             </div>
             <div class="form-group">
               <label>Gender</label><br>
@@ -108,6 +143,12 @@ if (!$profile_picture) {
               <label for="about">About</label>
               <textarea id="about" name="about" class="form-control" rows="4" readonly><?php echo $about; ?></textarea>
             </div>
+            <?php
+}
+            ?>
+            
+            
+            
             <div class="form-group mt-3">
               <button type="button" class="btn btn-primary" onclick="editProfile()">Edit</button>
               <button type="submit" class="btn btn-success" style="display: none;" id="save-btn">Save</button>

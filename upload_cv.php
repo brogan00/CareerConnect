@@ -1,13 +1,30 @@
 <?php
+define('SECURE_ACCESS', true);
 include "connexion/config.php";
 session_start();
 // Check if user is logged in and is a candidate
-if (!isset($_SESSION['user_email']) || ($_SESSION['user_type'] ?? '') !== 'candidat') {
-    header("Location: login.php");
+if (!isset($_SESSION['user_email'])) {
+    header("Location: connexion/login.php");
     exit();
 }
+if (!isset($_SESSION['user_type'])) {
+    if($_SESSION['user_type'] !== 'candidat') {
+        echo "<script>alert('You do not have permission to access this page.');</script>";
+        header("Location: index.php");
+        exit();
+    }
+}
 
-$user_id = $_SESSION['user_id'];
+
+$stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
+$stmt->bind_param("s", $_SESSION['user_email']);
+$stmt->execute();
+$stmt->bind_result($user_id);
+$stmt->store_result();
+$stmt->fetch();
+
+
+//$user_id = $_SESSION['user_id'];
 
 // Process form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -87,21 +104,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $degree = trim($_POST['degree']);
         $institution = trim($_POST['institution']);
         $grad_year = trim($_POST['graduation-year']);
+        $start_date = ($grad_year - 1) . '-09-01';
+        $end_date = $grad_year . '-06-15';
         $level = 'Licence'; // You can make this dynamic based on input if needed
 
         $stmt = $conn->prepare("INSERT INTO education (level, speciality, univ_name, start_date, end_date, user_id) 
                                VALUES (?, ?, ?, ?, ?, ?)
-                               ON DUPLICATE KEY UPDATE
-                               level = VALUES(level),
-                               speciality = VALUES(speciality),
-                               univ_name = VALUES(univ_name),
-                               start_date = VALUES(start_date),
-                               end_date = VALUES(end_date)");
+                              ");
         if (!$stmt) {
             throw new Exception("Database error: " . $conn->error);
         }
         $stmt->bind_param("sssssi", $level, $degree, $institution, 
-                          $grad_year . '-01-01', $grad_year . '-12-31', $user_id);
+        $start_date, $end_date, $user_id);
         $stmt->execute();
 
         // Handle experience (delete old ones first)
