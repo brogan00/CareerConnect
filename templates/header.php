@@ -32,7 +32,10 @@ if (isset($_SESSION['user_email'])) {
         $stmt = $conn->prepare("SELECT COUNT(*) FROM notifications WHERE user_id = (SELECT id FROM users WHERE email = ?) AND is_read = 0");
     } else if ($_SESSION['user_type'] == "recruiter") {
         $stmt = $conn->prepare("SELECT COUNT(*) FROM notifications WHERE recruiter_id = (SELECT id FROM recruiter WHERE email = ?) AND is_read = 0");
+    } else if ($_SESSION['user_type'] == "admin") {
+        $stmt = $conn->prepare("SELECT COUNT(*) FROM notifications WHERE admin_id = (SELECT id FROM users WHERE email = ?) AND is_read = 0");
     }
+    $stmt->store_result();
     $stmt->bind_param("s", $_SESSION['user_email']);
     $stmt->execute();
     $stmt->bind_result($notification_count);

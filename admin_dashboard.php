@@ -67,6 +67,30 @@ if (!isset($_SESSION['user_email']) || $_SESSION['user_type'] !== 'admin') {
       background-color: #dc3545;
       color: white;
     }
+
+    /* Alert animations */
+    .alert {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1100;
+      min-width: 300px;
+      animation: slideIn 0.5s forwards;
+    }
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    .alert.fade {
+      animation: slideOut 0.5s forwards;
+    }
+
+    @keyframes slideOut {
+      from { transform: translateX(0); opacity: 1; }
+      to { transform: translateX(100%); opacity: 0; }
+    }
   </style>
 </head>
 
@@ -361,13 +385,13 @@ if (!isset($_SESSION['user_email']) || $_SESSION['user_type'] !== 'admin') {
                           <td><?php echo date('M d, Y', strtotime($candidate['created_at'])); ?></td>
                           <td>
                             <?php if ($candidate['cv']): ?>
-                              <button onclick="approveCV(<?php echo $candidate['id']; ?>)" 
-                                      class="btn btn-sm btn-success" 
+                              <button data-user-id="<?php echo $candidate['id']; ?>" 
+                                      class="btn btn-sm btn-success approve-cv-btn" 
                                       <?php echo $cv_status == 'approved' ? 'disabled' : ''; ?>>
                                 <i class="fas fa-check"></i> Approve CV
                               </button>
-                              <button onclick="rejectCV(<?php echo $candidate['id']; ?>)" 
-                                      class="btn btn-sm btn-danger" 
+                              <button data-user-id="<?php echo $candidate['id']; ?>" 
+                                      class="btn btn-sm btn-danger reject-cv-btn" 
                                       <?php echo $cv_status == 'rejected' ? 'disabled' : ''; ?>>
                                 <i class="fas fa-times"></i> Reject CV
                               </button>
@@ -511,10 +535,136 @@ if (!isset($_SESSION['user_email']) || $_SESSION['user_type'] !== 'admin') {
     </div>
   </div>
 
+  <!-- CV Approval Modal -->
+  <div class="modal fade" id="approveCvModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Approve CV</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>Are you sure you want to approve this candidate's CV?</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-success" id="confirmApproveCv">Approve CV</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CV Rejection Modal -->
+  <div class="modal fade" id="rejectCvModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Reject CV</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>Please provide feedback to help the candidate improve their CV:</p>
+          <textarea class="form-control" id="rejectionFeedback" rows="5" placeholder="Enter feedback for the candidate..." required></textarea>
+          <div class="form-text">This feedback will be sent to the candidate.</div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-danger" id="confirmRejectCv">Reject with Feedback</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="assets/JS/jquery-3.7.1.js"></script>
   <script src="assets/JS/bootstrap.min.js"></script>
   <script src="assets/icons/all.min.js"></script>
   <script>
+    // CV Approval/Rejection System
+    let currentCvUserId = 0;
+
+    // Set up click handlers for all approve/reject buttons
+    $(document).on('click', '.approve-cv-btn', function() {
+      currentCvUserId = $(this).data('user-id');
+      $('#approveCvModal').modal('show');
+    });
+
+    $(document).on('click', '.reject-cv-btn', function() {
+      currentCvUserId = $(this).data('user-id');
+      $('#rejectionFeedback').val(''); // Clear previous feedback
+      $('#rejectCvModal').modal('show');
+    });
+
+    // Handle CV approval
+    $('#confirmApproveCv').click(function() {
+      $.post("admin_actions.php", {
+        action: "approve_cv",
+        user_id: currentCvUserId
+      }, function(data) {
+        if (data.success) {
+          showAlert('success', 'CV Approved', 'The CV has been approved successfully.');
+          $('#approveCvModal').modal('hide');
+          refreshCandidatesTable();
+        } else {
+          showAlert('danger', 'Error', data.message || 'Failed to approve CV.');
+        }
+      }, "json").fail(function() {
+        showAlert('danger', 'Error', 'Failed to communicate with server.');
+      });
+    });
+
+    // Handle CV rejection with feedback
+    $('#confirmRejectCv').click(function() {
+      const feedback = $('#rejectionFeedback').val().trim();
+      
+      if (!feedback) {
+        showAlert('warning', 'Feedback Required', 'Please provide feedback for the candidate.');
+        return;
+      }
+      
+      $.post("admin_actions.php", {
+        action: "reject_cv",
+        user_id: currentCvUserId,
+        feedback: feedback
+      }, function(data) {
+        if (data.success) {
+          showAlert('success', 'CV Rejected', 'The CV has been rejected and feedback sent.');
+          $('#rejectCvModal').modal('hide');
+          refreshCandidatesTable();
+        } else {
+          showAlert('danger', 'Error', data.message || 'Failed to reject CV.');
+        }
+      }, "json").fail(function() {
+        showAlert('danger', 'Error', 'Failed to communicate with server.');
+      });
+    });
+
+    // Helper function to show alerts
+    function showAlert(type, title, message) {
+      const alertHtml = `
+        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+          <strong>${title}</strong> ${message}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      `;
+      
+      // Prepend to main content area
+      $('main').prepend(alertHtml);
+      
+      // Auto-dismiss after 5 seconds
+      setTimeout(() => {
+        $('.alert').alert('close');
+      }, 5000);
+    }
+
+    // Refresh candidates table after action
+    function refreshCandidatesTable() {
+      $.get('admin_actions.php?action=get_candidates', function(data) {
+        if (data.success) {
+          $('#manage-candidates table tbody').html(data.html);
+        }
+      }, 'json');
+    }
+
     // Approve Job
     function approveJob(jobId) {
       if (confirm("Are you sure you want to approve this job posting?")) {
@@ -523,10 +673,10 @@ if (!isset($_SESSION['user_email']) || $_SESSION['user_type'] !== 'admin') {
           job_id: jobId
         }, function(data) {
           if (data.success) {
-            alert("Job approved successfully!");
+            showAlert('success', 'Job Approved', 'The job has been approved successfully.');
             location.reload();
           } else {
-            alert("Error: " + data.message);
+            showAlert('danger', 'Error', data.message || 'Failed to approve job.');
           }
         }, "json");
       }
@@ -540,10 +690,10 @@ if (!isset($_SESSION['user_email']) || $_SESSION['user_type'] !== 'admin') {
           job_id: jobId
         }, function(data) {
           if (data.success) {
-            alert("Job rejected successfully!");
+            showAlert('success', 'Job Rejected', 'The job has been rejected successfully.');
             location.reload();
           } else {
-            alert("Error: " + data.message);
+            showAlert('danger', 'Error', data.message || 'Failed to reject job.');
           }
         }, "json");
       }
@@ -557,10 +707,10 @@ if (!isset($_SESSION['user_email']) || $_SESSION['user_type'] !== 'admin') {
           job_id: jobId
         }, function(data) {
           if (data.success) {
-            alert("Job deleted successfully!");
+            showAlert('success', 'Job Deleted', 'The job has been deleted successfully.');
             location.reload();
           } else {
-            alert("Error: " + data.message);
+            showAlert('danger', 'Error', data.message || 'Failed to delete job.');
           }
         }, "json");
       }
@@ -576,10 +726,10 @@ if (!isset($_SESSION['user_email']) || $_SESSION['user_type'] !== 'admin') {
           new_status: newStatus
         }, function(data) {
           if (data.success) {
-            alert("Candidate status updated successfully!");
+            showAlert('success', 'Status Updated', `Candidate has been ${newStatus === 'active' ? 'activated' : 'deactivated'}.`);
             location.reload();
           } else {
-            alert("Error: " + data.message);
+            showAlert('danger', 'Error', data.message || 'Failed to update status.');
           }
         }, "json");
       }
@@ -593,10 +743,10 @@ if (!isset($_SESSION['user_email']) || $_SESSION['user_type'] !== 'admin') {
           user_id: userId
         }, function(data) {
           if (data.success) {
-            alert("Candidate deleted successfully!");
+            showAlert('success', 'Candidate Deleted', 'The candidate has been deleted successfully.');
             location.reload();
           } else {
-            alert("Error: " + data.message);
+            showAlert('danger', 'Error', data.message || 'Failed to delete candidate.');
           }
         }, "json");
       }
@@ -610,44 +760,10 @@ if (!isset($_SESSION['user_email']) || $_SESSION['user_type'] !== 'admin') {
           recruiter_id: recruiterId
         }, function(data) {
           if (data.success) {
-            alert("Recruiter deleted successfully!");
+            showAlert('success', 'Recruiter Deleted', 'The recruiter has been deleted successfully.');
             location.reload();
           } else {
-            alert("Error: " + data.message);
-          }
-        }, "json");
-      }
-    }
-
-    // Approve CV
-    function approveCV(userId) {
-      if (confirm("Are you sure you want to approve this CV?")) {
-        $.post("admin_actions.php", {
-          action: "approve_cv",
-          user_id: userId
-        }, function(data) {
-          if (data.success) {
-            alert("CV approved successfully!");
-            location.reload();
-          } else {
-            alert("Error: " + data.message);
-          }
-        }, "json");
-      }
-    }
-
-    // Reject CV
-    function rejectCV(userId) {
-      if (confirm("Are you sure you want to reject this CV?")) {
-        $.post("admin_actions.php", {
-          action: "reject_cv",
-          user_id: userId
-        }, function(data) {
-          if (data.success) {
-            alert("CV rejected successfully!");
-            location.reload();
-          } else {
-            alert("Error: " + data.message);
+            showAlert('danger', 'Error', data.message || 'Failed to delete recruiter.');
           }
         }, "json");
       }
@@ -693,5 +809,4 @@ if (!isset($_SESSION['user_email']) || $_SESSION['user_type'] !== 'admin') {
     });
   </script>
 </body>
-
 </html>

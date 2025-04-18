@@ -2,29 +2,29 @@
 define('SECURE_ACCESS', true);
 include "connexion/config.php";
 session_start();
+
+// Include notifications functions
+require_once 'functions/notifications_functions.php';
+
 // Check if user is logged in and is a candidate
 if (!isset($_SESSION['user_email'])) {
     header("Location: connexion/login.php");
     exit();
 }
-if (!isset($_SESSION['user_type'])) {
-    if($_SESSION['user_type'] !== 'candidat') {
-        echo "<script>alert('You do not have permission to access this page.');</script>";
-        header("Location: index.php");
-        exit();
-    }
+
+if (!isset($_SESSION['user_type']) || $_SESSION['user_type'] !== 'candidat') {
+    echo "<script>alert('You do not have permission to access this page.');</script>";
+    header("Location: index.php");
+    exit();
 }
 
-
+// Get user ID
 $stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
 $stmt->bind_param("s", $_SESSION['user_email']);
 $stmt->execute();
 $stmt->bind_result($user_id);
 $stmt->store_result();
 $stmt->fetch();
-
-
-//$user_id = $_SESSION['user_id'];
 
 // Process form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -106,16 +106,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $grad_year = trim($_POST['graduation-year']);
         $start_date = ($grad_year - 1) . '-09-01';
         $end_date = $grad_year . '-06-15';
-        $level = 'Licence'; // You can make this dynamic based on input if needed
+        $level = 'Licence';
 
         $stmt = $conn->prepare("INSERT INTO education (level, speciality, univ_name, start_date, end_date, user_id) 
-                               VALUES (?, ?, ?, ?, ?, ?)
-                              ");
+                              VALUES (?, ?, ?, ?, ?, ?)");
         if (!$stmt) {
             throw new Exception("Database error: " . $conn->error);
         }
-        $stmt->bind_param("sssssi", $level, $degree, $institution, 
-        $start_date, $end_date, $user_id);
+        $stmt->bind_param("sssssi", $level, $degree, $institution, $start_date, $end_date, $user_id);
         $stmt->execute();
 
         // Handle experience (delete old ones first)
@@ -142,7 +140,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         if (!empty($_POST['skills'])) {
             $skillsArray = array_map('trim', explode(',', $_POST['skills']));
-            $skillsArray = array_filter($skillsArray); // Remove empty entries
+            $skillsArray = array_filter($skillsArray);
             
             if (!empty($skillsArray)) {
                 $stmt = $conn->prepare("INSERT INTO skills (content, user_id) VALUES (?, ?)");
@@ -157,29 +155,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-// In your upload_cv.php, after successful CV upload:
+        // Get user's name for notifications
+        $name_query = $conn->query("SELECT first_name, last_name FROM users WHERE id = $user_id");
+        if ($name_query && $name_query->num_rows > 0) {
+            $name_data = $name_query->fetch_assoc();
+            $full_name = htmlspecialchars($name_data['first_name'] . ' ' . $name_data['last_name']);
+        } else {
+            $full_name = "User";
+        }
 
-// Notify all admins
-$adminQuery = $conn->query("SELECT id FROM users WHERE type = 'admin'");
-if ($adminQuery) {
-    while ($admin = $adminQuery->fetch_assoc()) {
-        $message = "New CV uploaded by " . htmlspecialchars($firstName . ' ' . $lastName) . " needs approval";
+        // Notify all admins
+        $adminQuery = $conn->query("SELECT id FROM users WHERE type = 'admin'");
+        if ($adminQuery) {
+            while ($admin = $adminQuery->fetch_assoc()) {
+                sendNotification($conn, [
+                    'admin_id' => $admin['id'],
+                    'message' => "New CV uploaded by $full_name needs approval",
+                    'type' => 'cv_submission',
+                    'related_id' => $user_id
+                ]);
+            }
+        }
+
+        // Also notify the candidate
         sendNotification($conn, [
-            'admin_id' => $admin['id'],
-            'message' => $message,
+            'user_id' => $user_id,
+            'message' => 'Your CV has been submitted for admin approval',
             'type' => 'cv_submission',
             'related_id' => $user_id
         ]);
-    }
-}
 
-// Also notify the candidate
-sendNotification($conn, [
-    'user_id' => $user_id,
-    'message' => 'Your CV has been submitted for admin approval',
-    'type' => 'cv_submission',
-    'related_id' => $user_id
-]);
+        // Commit transaction
+        $conn->commit();
+        
+        $_SESSION['success'] = "CV submitted successfully!";
+        header("Location: upload_cv.php");
+        exit();
 
     } catch (Exception $e) {
         // Rollback transaction on error
@@ -217,31 +228,6 @@ $result = $conn->query("SELECT content FROM skills WHERE user_id = $user_id");
 if ($result && $result->num_rows > 0) {
     $skills = array_column($result->fetch_all(MYSQLI_ASSOC), 'content');
 }
-?>
-<?php
-// In your upload_cv.php, after successful CV upload:
-
-// Notify all admins
-$adminQuery = $conn->query("SELECT id FROM users WHERE type = 'admin'");
-if ($adminQuery) {
-    while ($admin = $adminQuery->fetch_assoc()) {
-        $message = "New CV uploaded by " . htmlspecialchars($firstName . ' ' . $lastName) . " needs approval";
-        sendNotification($conn, [
-            'admin_id' => $admin['id'],
-            'message' => $message,
-            'type' => 'cv_submission',
-            'related_id' => $user_id
-        ]);
-    }
-}
-
-// Also notify the candidate
-sendNotification($conn, [
-    'user_id' => $user_id,
-    'message' => 'Your CV has been submitted for admin approval',
-    'type' => 'cv_submission',
-    'related_id' => $user_id
-]);
 ?>
 
 <!DOCTYPE html>
