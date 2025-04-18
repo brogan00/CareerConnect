@@ -157,26 +157,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        // Notify all admins
-        $adminQuery = $conn->query("SELECT id FROM users WHERE type = 'admin'");
-        if ($adminQuery) {
-            while ($admin = $adminQuery->fetch_assoc()) {
-                $message = "New CV uploaded by " . htmlspecialchars($firstName . ' ' . $lastName) . " needs approval";
-                $stmt = $conn->prepare("INSERT INTO notifications (user_id, admin_id, message, type, related_id) 
-                                      VALUES (?, ?, ?, 'cv_submission', ?)");
-                if ($stmt) {
-                    $stmt->bind_param("iisi", $user_id, $admin['id'], $message, $user_id);
-                    $stmt->execute();
-                }
-            }
-        }
+// In your upload_cv.php, after successful CV upload:
 
-        // Commit transaction
-        $conn->commit();
+// Notify all admins
+$adminQuery = $conn->query("SELECT id FROM users WHERE type = 'admin'");
+if ($adminQuery) {
+    while ($admin = $adminQuery->fetch_assoc()) {
+        $message = "New CV uploaded by " . htmlspecialchars($firstName . ' ' . $lastName) . " needs approval";
+        sendNotification($conn, [
+            'admin_id' => $admin['id'],
+            'message' => $message,
+            'type' => 'cv_submission',
+            'related_id' => $user_id
+        ]);
+    }
+}
 
-        $_SESSION['success'] = "Your CV has been submitted for admin approval. You'll be notified once it's reviewed.";
-        header("Location: dashboard.php");
-        exit();
+// Also notify the candidate
+sendNotification($conn, [
+    'user_id' => $user_id,
+    'message' => 'Your CV has been submitted for admin approval',
+    'type' => 'cv_submission',
+    'related_id' => $user_id
+]);
 
     } catch (Exception $e) {
         // Rollback transaction on error
@@ -214,6 +217,31 @@ $result = $conn->query("SELECT content FROM skills WHERE user_id = $user_id");
 if ($result && $result->num_rows > 0) {
     $skills = array_column($result->fetch_all(MYSQLI_ASSOC), 'content');
 }
+?>
+<?php
+// In your upload_cv.php, after successful CV upload:
+
+// Notify all admins
+$adminQuery = $conn->query("SELECT id FROM users WHERE type = 'admin'");
+if ($adminQuery) {
+    while ($admin = $adminQuery->fetch_assoc()) {
+        $message = "New CV uploaded by " . htmlspecialchars($firstName . ' ' . $lastName) . " needs approval";
+        sendNotification($conn, [
+            'admin_id' => $admin['id'],
+            'message' => $message,
+            'type' => 'cv_submission',
+            'related_id' => $user_id
+        ]);
+    }
+}
+
+// Also notify the candidate
+sendNotification($conn, [
+    'user_id' => $user_id,
+    'message' => 'Your CV has been submitted for admin approval',
+    'type' => 'cv_submission',
+    'related_id' => $user_id
+]);
 ?>
 
 <!DOCTYPE html>

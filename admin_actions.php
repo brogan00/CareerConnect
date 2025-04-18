@@ -99,35 +99,79 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       }
       break;
       
-    case 'approve_cv':
-      if (isset($_POST['user_id'])) {
-        $userId = (int)$_POST['user_id'];
-        $stmt = $conn->prepare("UPDATE users SET cv_status = 'approved' WHERE id = ?");
-        $stmt->bind_param("i", $userId);
-        if ($stmt->execute()) {
-          $response = ['success' => true, 'message' => 'CV approved'];
-        } else {
-          $response = ['success' => false, 'message' => 'Database error'];
+      require_once '../functions/notifications_functions.php';
+        
+        switch ($action) {
+          // ... (keep your existing cases)
+          
+          case 'approve_cv':
+            if (isset($_POST['user_id'])) {
+              $userId = (int)$_POST['user_id'];
+              
+              // Update user status
+              $stmt = $conn->prepare("UPDATE users SET status = 'active' WHERE id = ?");
+              $stmt->bind_param("i", $userId);
+              
+              if ($stmt->execute()) {
+                // Get user info
+                $userStmt = $conn->prepare("SELECT first_name, last_name FROM users WHERE id = ?");
+                $userStmt->bind_param("i", $userId);
+                $userStmt->execute();
+                $userStmt->bind_result($firstName, $lastName);
+                $userStmt->fetch();
+                $userStmt->close();
+                
+                // Notify user
+                sendNotification($conn, [
+                    'user_id' => $userId,
+                    'message' => 'Your CV has been approved by admin',
+                    'type' => 'cv_approval',
+                    'related_id' => $userId
+                ]);
+                
+                $response = ['success' => true, 'message' => 'CV approved'];
+              } else {
+                $response = ['success' => false, 'message' => 'Database error'];
+              }
+            }
+            break;
+            
+          case 'reject_cv':
+            if (isset($_POST['user_id'])) {
+              $userId = (int)$_POST['user_id'];
+              
+              // Update user status
+              $stmt = $conn->prepare("UPDATE users SET status = 'inactive', cv = NULL WHERE id = ?");
+              $stmt->bind_param("i", $userId);
+              
+              if ($stmt->execute()) {
+                // Get user info
+                $userStmt = $conn->prepare("SELECT first_name, last_name FROM users WHERE id = ?");
+                $userStmt->bind_param("i", $userId);
+                $userStmt->execute();
+                $userStmt->bind_result($firstName, $lastName);
+                $userStmt->fetch();
+                $userStmt->close();
+                
+                // Notify user
+                sendNotification($conn, [
+                    'user_id' => $userId,
+                    'message' => 'Your CV has been rejected by admin',
+                    'type' => 'cv_rejection',
+                    'related_id' => $userId
+                ]);
+                
+                $response = ['success' => true, 'message' => 'CV rejected'];
+              } else {
+                $response = ['success' => false, 'message' => 'Database error'];
+              }
+            }
+            break;
+            
+          default:
+            $response = ['success' => false, 'message' => 'Unknown action'];
         }
       }
-      break;
-      
-    case 'reject_cv':
-      if (isset($_POST['user_id'])) {
-        $userId = (int)$_POST['user_id'];
-        $stmt = $conn->prepare("UPDATE users SET cv_status = 'rejected' WHERE id = ?");
-        $stmt->bind_param("i", $userId);
-        if ($stmt->execute()) {
-          $response = ['success' => true, 'message' => 'CV rejected'];
-        } else {
-          $response = ['success' => false, 'message' => 'Database error'];
-        }
-      }
-      break;
-      
-    default:
-      $response = ['success' => false, 'message' => 'Unknown action'];
-  }
 }
 
 header('Content-Type: application/json');
