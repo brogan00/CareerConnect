@@ -140,7 +140,8 @@ CREATE TABLE `job` (
 
 CREATE TABLE `recruiter` (
   `id` int(11) NOT NULL,
-  `full_name` varchar(255) DEFAULT NULL,
+  `first_name` varchar(255) DEFAULT NULL,
+  `last_name` varchar(255) DEFAULT NULL,
   `email` varchar(255) DEFAULT NULL,
   `password` varchar(255) DEFAULT NULL,
   `address` text DEFAULT NULL,
