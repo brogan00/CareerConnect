@@ -3,10 +3,10 @@ define('SECURE_ACCESS', true);
 include "connexion/config.php";
 session_start();
 
-// Include notifications functions
+
 require_once 'functions/notifications_functions.php';
 
-// Check if user is logged in and is a candidate
+
 if (!isset($_SESSION['user_email'])) {
     header("Location: connexion/login.php");
     exit();
@@ -18,7 +18,7 @@ if (!isset($_SESSION['user_type']) || $_SESSION['user_type'] !== 'candidat') {
     exit();
 }
 
-// Get user ID
+
 $stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
 $stmt->bind_param("s", $_SESSION['user_email']);
 $stmt->execute();
@@ -26,10 +26,9 @@ $stmt->bind_result($user_id);
 $stmt->store_result();
 $stmt->fetch();
 
-// Process form submission
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
-        // Validate required fields
         $required = ['full-name', 'email', 'phone', 'degree', 'institution', 'graduation-year'];
         foreach ($required as $field) {
             if (empty($_POST[$field])) {
@@ -37,7 +36,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        // Handle file upload
         $cv_path = null;
         if (isset($_FILES['cv-upload']) && $_FILES['cv-upload']['error'] === UPLOAD_ERR_OK) {
             $allowed = ['pdf', 'doc', 'docx'];
@@ -47,7 +45,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 throw new Exception("Invalid file type. Only PDF, DOC, and DOCX are allowed.");
             }
             
-            // Validate file size (max 5MB)
             if ($_FILES['cv-upload']['size'] > 5 * 1024 * 1024) {
                 throw new Exception("File size exceeds 5MB limit");
             }
@@ -64,7 +61,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 throw new Exception("Failed to upload CV");
             }
         } else {
-            // Keep existing CV if no new file was uploaded
             $result = $conn->query("SELECT cv FROM users WHERE id = $user_id");
             if ($result && $row = $result->fetch_assoc()) {
                 $cv_path = $row['cv'];
@@ -73,10 +69,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        // Begin transaction
         $conn->begin_transaction();
 
-        // Update user data
         $nameParts = explode(' ', $_POST['full-name'], 2);
         $firstName = trim($nameParts[0]);
         $lastName = trim($nameParts[1] ?? '');
@@ -100,7 +94,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->bind_param("ssssssi", $firstName, $lastName, $email, $phone, $address, $cv_path, $user_id);
         $stmt->execute();
 
-        // Insert/update education
         $degree = trim($_POST['degree']);
         $institution = trim($_POST['institution']);
         $grad_year = trim($_POST['graduation-year']);
@@ -116,7 +109,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->bind_param("sssssi", $level, $degree, $institution, $start_date, $end_date, $user_id);
         $stmt->execute();
 
-        // Handle experience (delete old ones first)
         $conn->query("DELETE FROM experience WHERE user_id = $user_id");
         
         if (!empty($_POST['job-title'])) {
@@ -135,7 +127,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute();
         }
 
-        // Handle skills (delete old ones first)
         $conn->query("DELETE FROM skills WHERE user_id = $user_id");
         
         if (!empty($_POST['skills'])) {
@@ -155,7 +146,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        // Get user's name for notifications
         $name_query = $conn->query("SELECT first_name, last_name FROM users WHERE id = $user_id");
         if ($name_query && $name_query->num_rows > 0) {
             $name_data = $name_query->fetch_assoc();
@@ -164,7 +154,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $full_name = "User";
         }
 
-        // Notify all admins
         $adminQuery = $conn->query("SELECT id FROM users WHERE type = 'admin'");
         if ($adminQuery) {
             while ($admin = $adminQuery->fetch_assoc()) {
@@ -177,7 +166,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        // Also notify the candidate
         sendNotification($conn, [
             'user_id' => $user_id,
             'message' => 'Your CV has been submitted for admin approval',
@@ -185,15 +173,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'related_id' => $user_id
         ]);
 
-        // Commit transaction
         $conn->commit();
         
         $_SESSION['success'] = "CV submitted successfully!";
         header("Location: upload_cv.php");
         exit();
 
+
+
     } catch (Exception $e) {
-        // Rollback transaction on error
         $conn->rollback();
         $_SESSION['error'] = $e->getMessage();
         header("Location: upload_cv.php");
@@ -201,28 +189,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Get existing user data
 $userData = [];
 $result = $conn->query("SELECT * FROM users WHERE id = $user_id");
 if ($result && $result->num_rows > 0) {
     $userData = $result->fetch_assoc();
 }
 
-// Get existing education
 $education = [];
 $result = $conn->query("SELECT * FROM education WHERE user_id = $user_id");
 if ($result && $result->num_rows > 0) {
     $education = $result->fetch_assoc();
 }
 
-// Get existing experience
 $experience = [];
 $result = $conn->query("SELECT * FROM experience WHERE user_id = $user_id ORDER BY start_date DESC");
 if ($result && $result->num_rows > 0) {
     $experience = $result->fetch_all(MYSQLI_ASSOC);
 }
 
-// Get existing skills
 $skills = [];
 $result = $conn->query("SELECT content FROM skills WHERE user_id = $user_id");
 if ($result && $result->num_rows > 0) {
@@ -239,7 +223,6 @@ if ($result && $result->num_rows > 0) {
     <link rel="stylesheet" href="assets/CSS/bootstrap.min.css">
     <link rel="stylesheet" href="assets/CSS/style.css">
     <link rel="icon" type="image/png" href="./assets/images/hamidou.png" width="8">
-    <!-- Tagify CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.css">
     <style>
         .experience-entry {
@@ -277,7 +260,6 @@ if ($result && $result->num_rows > 0) {
         <?php endif; ?>
 
         <form action="upload_cv.php" method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
-            <!-- Personal Information -->
             <div class="card mb-4">
                 <div class="card-header bg-primary text-white">
                     <h5 class="card-title mb-0">Personal Information</h5>
@@ -302,12 +284,72 @@ if ($result && $result->num_rows > 0) {
                         <div class="invalid-feedback">Please provide your phone number.</div>
                     </div>
                     <div class="mb-3">
-                        <label for="address" class="form-label">Address</label>
+                        <label for="address" class="form-label">Address (Wilaya)</label>
                         <input type="text" class="form-control" id="address" name="address" 
-                               value="<?= htmlspecialchars($userData['address'] ?? '') ?>">
+                               value="<?= htmlspecialchars($userData['address'] ?? '') ?>" list="wilayas" placeholder="Select your wilaya">
+                        <datalist id="wilayas">
+                            <option value="Adrar">
+                            <option value="Chlef">
+                            <option value="Laghouat">
+                            <option value="Oum El Bouaghi">
+                            <option value="Batna">
+                            <option value="Béjaïa">
+                            <option value="Biskra">
+                            <option value="Béchar">
+                            <option value="Blida">
+                            <option value="Bouira">
+                            <option value="Tamanrasset">
+                            <option value="Tébessa">
+                            <option value="Tlemcen">
+                            <option value="Tiaret">
+                            <option value="Tizi Ouzou">
+                            <option value="Algiers">
+                            <option value="Djelfa">
+                            <option value="Jijel">
+                            <option value="Sétif">
+                            <option value="Saïda">
+                            <option value="Skikda">
+                            <option value="Sidi Bel Abbès">
+                            <option value="Annaba">
+                            <option value="Guelma">
+                            <option value="Constantine">
+                            <option value="Médéa">
+                            <option value="Mostaganem">
+                            <option value="M'Sila">
+                            <option value="Mascara">
+                            <option value="Ouargla">
+                            <option value="Oran">
+                            <option value="El Bayadh">
+                            <option value="Illizi">
+                            <option value="Bordj Bou Arréridj">
+                            <option value="Boumerdès">
+                            <option value="El Tarf">
+                            <option value="Tindouf">
+                            <option value="Tissemsilt">
+                            <option value="El Oued">
+                            <option value="Khenchela">
+                            <option value="Souk Ahras">
+                            <option value="Tipaza">
+                            <option value="Mila">
+                            <option value="Aïn Defla">
+                            <option value="Naâma">
+                            <option value="Aïn Témouchent">
+                            <option value="Ghardaïa">
+                            <option value="Relizane">
+                            <option value="Timimoun">
+                            <option value="Bordj Badji Mokhtar">
+                            <option value="Ouled Djellal">
+                            <option value="Béni Abbès">
+                            <option value="In Salah">
+                            <option value="In Guezzam">
+                            <option value="Touggourt">
+                            <option value="Djanet">
+                            <option value="El M'Ghair">
+                            <option value="El Menia">
+                        </datalist>
                     </div>
                 </div>
-            </div>
+        </div>
 
             <!-- Education -->
             <div class="card mb-4">
@@ -436,7 +478,6 @@ if ($result && $result->num_rows > 0) {
                 </div>
             </div>
 
-            <!-- Submit Button -->
             <div class="text-center">
                 <button type="submit" class="btn btn-primary btn-lg px-5">Submit for Approval</button>
                 <a href="dashboard.php" class="btn btn-secondary btn-lg ms-2 px-5">Cancel</a>
@@ -446,23 +487,23 @@ if ($result && $result->num_rows > 0) {
 
     <?php include "templates/footer.php" ?>
 
-    <!-- Bootstrap JS -->
     <script src="assets/JS/bootstrap.bundle.min.js"></script>
-    <!-- Tagify JS -->
     <script src="https://cdn.jsdelivr.net/npm/@yaireo/tagify"></script>
     <script src="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.polyfills.min.js"></script>
     
     <script>
-    // Initialize skills tagify
+    // Initialize only skills tagify
     const input = document.querySelector('#skills');
     const skillsList = [
-        "JavaScript", "Python", "HTML", "CSS", "PHP", "Laravel", "Node.js", "React", "Vue.js", "Angular",
-        "Java", "Spring Boot", "C#", ".NET", "SQL", "MySQL", "PostgreSQL", "MongoDB", "Firebase",
-        "Git", "GitHub", "Docker", "Kubernetes", "AWS", "Azure", "Google Cloud", "DevOps",
-        "Agile", "Scrum", "UI/UX", "Figma", "Photoshop", "Illustrator", "SEO", "Data Analysis",
-        "Machine Learning", "AI", "TensorFlow", "Pandas", "NumPy", "C++", "Rust", "Go",
-        "Shell Scripting", "TypeScript", "Excel", "WordPress", "JIRA", "Customer Service",
-        "Marketing", "Public Speaking", "Project Management", "Business Analysis"
+        "JavaScript", "Python", "HTML", "CSS", "PHP", "Laravel", "Node.js", 
+        "React", "Vue.js", "Angular", "Java", "Spring Boot", "C#", ".NET", 
+        "SQL", "MySQL", "PostgreSQL", "MongoDB", "Firebase", "Git", "GitHub", 
+        "Docker", "Kubernetes", "AWS", "Azure", "Google Cloud", "DevOps",
+        "Agile", "Scrum", "UI/UX", "Figma", "Photoshop", "Illustrator", "SEO", 
+        "Data Analysis", "Machine Learning", "AI", "TensorFlow", "Pandas", 
+        "NumPy", "C++", "Rust", "Go", "Shell Scripting", "TypeScript", "Excel", 
+        "WordPress", "JIRA", "Customer Service", "Marketing", "Public Speaking", 
+        "Project Management", "Business Analysis"
     ];
 
     new Tagify(input, {
@@ -473,34 +514,27 @@ if ($result && $result->num_rows > 0) {
         }
     });
 
-    // Form validation
     (function () {
         'use strict'
-        
-        // Fetch all the forms we want to apply custom Bootstrap validation styles to
         const forms = document.querySelectorAll('.needs-validation')
-        
-        // Loop over them and prevent submission
         Array.from(forms).forEach(form => {
             form.addEventListener('submit', event => {
                 if (!form.checkValidity()) {
                     event.preventDefault()
                     event.stopPropagation()
                 }
-                
                 form.classList.add('was-validated')
             }, false)
         })
     })();
 
-    // File size validation
     document.getElementById('cv-upload').addEventListener('change', function(e) {
         const file = e.target.files[0];
-        if (file && file.size > 5 * 1024 * 1024) { // 5MB
+        if (file && file.size > 5 * 1024 * 1024) {
             alert('File size exceeds 5MB limit');
             e.target.value = '';
         }
     });
     </script>
-</body>
-</html>
+    </body>
+    </html>

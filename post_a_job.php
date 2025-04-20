@@ -3,6 +3,11 @@ include "connexion/config.php";
 define('SECURE_ACCESS', true);
 session_start();
 
+// Debug: View submitted data (remove after testing)
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    error_log(print_r($_POST, true));
+}
+
 // Check if user is logged in and is a recruiter
 if (!isset($_SESSION['user_email'])) {
     header("Location: connexion/login.php");
@@ -46,12 +51,18 @@ if (!empty($recruiter_info['company_id'])) {
 // Process form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
-        // Validate required fields
-        $required = ['company_name', 'job_title', 'city', 'state', 'contract_type', 'job_description'];
+        // Validate required fields (removed 'city' from requirements)
+        $required = ['company_name', 'job_title', 'state', 'contract_type', 'job_description'];
+        $missing_fields = [];
+        
         foreach ($required as $field) {
             if (empty($_POST[$field])) {
-                throw new Exception("Please fill in all required fields");
+                $missing_fields[] = $field;
             }
+        }
+        
+        if (!empty($missing_fields)) {
+            throw new Exception("Missing required fields: " . implode(', ', $missing_fields));
         }
 
         // Sanitize inputs
@@ -62,13 +73,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $contact_email = $conn->real_escape_string(trim($_POST['contact_email'] ?? ''));
         $contact_phone = $conn->real_escape_string(trim($_POST['contact_phone'] ?? ''));
         $job_title = $conn->real_escape_string(trim($_POST['job_title']));
-        $city = $conn->real_escape_string(trim($_POST['city']));
         $state = $conn->real_escape_string(trim($_POST['state']));
         $contract_type = $conn->real_escape_string(trim($_POST['contract_type']));
         $working_hours = $conn->real_escape_string(trim($_POST['working_hours'] ?? ''));
         $salary_amount = is_numeric($_POST['salary_amount'] ?? 0) ? floatval($_POST['salary_amount']) : 0;
         $job_description = $conn->real_escape_string(trim($_POST['job_description']));
-        $location = "$city, $state, Algeria";
+        $location = "$state, Algeria"; // Removed city from location string
 
         // Begin transaction
         $conn->begin_transaction();
@@ -107,14 +117,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->close();
         }
 
-        // Insert job (category_id is set to NULL as it's optional in your schema)
+        // Insert job with pending status
         $stmt = $conn->prepare("
             INSERT INTO job (
                 title, mission, type_contract, salary, expiration_date,
-                recruter_id, created_at, updated_at
+                recruiter_id, created_at, updated_at, status
             ) VALUES (
                 ?, ?, ?, ?, DATE_ADD(CURDATE(), INTERVAL 30 DAY),
-                ?, NOW(), NOW()
+                ?, NOW(), NOW(), 'pending'
             )
         ");
         $stmt->bind_param("sssdi", $job_title, $job_description, $contract_type, $salary_amount, $user_id);
@@ -122,23 +132,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $job_id = $stmt->insert_id;
         $stmt->close();
 
+        // Create notification for admin
+        $notification_message = "New job posted by " . $recruiter_info['email'] . " needs approval";
+        $stmt = $conn->prepare("
+            INSERT INTO notifications (user_id, admin_id, message, type, related_id, created_at)
+            VALUES (?, (SELECT id FROM users WHERE type = 'admin' LIMIT 1), ?, 'job_approval', ?, NOW())
+        ");
+        $stmt->bind_param("isi", $user_id, $notification_message, $job_id);
+        $stmt->execute();
+        $stmt->close();
+
         // Commit transaction
         $conn->commit();
 
-        // Redirect to job details page
-        $_SESSION['success'] = "Job posted successfully!";
-        header("Location: job_details.php?id=$job_id");
+        $_SESSION['success'] = "Job submitted successfully! It will be visible after admin approval.";
+        header("Location: post_a_job.php");
         exit();
 
     } catch (Exception $e) {
         $conn->rollback();
         $_SESSION['error'] = $e->getMessage();
-        header("Location: post_job.php");
+        header("Location: post_a_job.php");
         exit();
     }
 }
 
-// List of all Algerian wilayas
+// List of Algerian wilayas
 $algerian_wilayas = [
     "Adrar", "Chlef", "Laghouat", "Oum El Bouaghi", "Batna", "Béjaïa", "Biskra",
     "Béchar", "Blida", "Bouira", "Tamanrasset", "Tébessa", "Tlemcen", "Tiaret",
@@ -168,7 +187,6 @@ $algerian_wilayas = [
             content: " *";
             color: red;
         }
-        
         .wilaya-suggestions {
             position: absolute;
             z-index: 1000;
@@ -180,45 +198,18 @@ $algerian_wilayas = [
             border-radius: 0 0 5px 5px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             display: none;
-            opacity: 0;
-            transform: translateY(-10px);
-            transition: all 0.3s ease;
         }
-        
-        .wilaya-suggestions.show {
-            display: block;
-            opacity: 1;
-            transform: translateY(0);
-        }
-        
         .wilaya-item {
-            padding: 10px 15px;
+            padding: 8px 12px;
             cursor: pointer;
-            transition: all 0.2s ease;
-            border-bottom: 1px solid #f0f0f0;
+            border-bottom: 1px solid #eee;
         }
-        
-        .wilaya-item:last-child {
-            border-bottom: none;
-        }
-        
         .wilaya-item:hover {
             background-color: #f8f9fa;
-            transform: translateX(5px);
         }
-        
-        .wilaya-item.highlight {
-            background-color: #e9f5ff;
-            font-weight: bold;
-        }
-        
         .wilaya-match {
-            color: #0d6efd;
             font-weight: bold;
-        }
-        
-        .location-container {
-            position: relative;
+            color: #0d6efd;
         }
     </style>
 </head>
@@ -226,10 +217,10 @@ $algerian_wilayas = [
     <?php include "templates/header.php" ?>
 
     <div class="container mt-5 mb-5">
-        <h2 class="text-center mb-4 animate__animated animate__fadeIn">Post a Job</h2>
+        <h2 class="text-center mb-4">Post a Job</h2>
         
         <?php if (isset($_SESSION['error'])): ?>
-            <div class="alert alert-danger alert-dismissible fade show animate__animated animate__shakeX">
+            <div class="alert alert-danger alert-dismissible fade show">
                 <?= htmlspecialchars($_SESSION['error']) ?>
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
@@ -237,7 +228,7 @@ $algerian_wilayas = [
         <?php endif; ?>
         
         <?php if (isset($_SESSION['success'])): ?>
-            <div class="alert alert-success alert-dismissible fade show animate__animated animate__fadeIn">
+            <div class="alert alert-success alert-dismissible fade show">
                 <?= htmlspecialchars($_SESSION['success']) ?>
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
@@ -246,7 +237,7 @@ $algerian_wilayas = [
 
         <form method="POST" action="" class="needs-validation" novalidate>
             <!-- Company Information -->
-            <div class="card mb-4 animate__animated animate__fadeIn">
+            <div class="card mb-4">
                 <div class="card-header bg-primary text-white">
                     <h5 class="card-title mb-0">Company Information</h5>
                 </div>
@@ -255,7 +246,6 @@ $algerian_wilayas = [
                         <label for="company_name" class="form-label required-field">Company Name</label>
                         <input type="text" class="form-control" id="company_name" name="company_name" 
                                value="<?= htmlspecialchars($company_info['name'] ?? '') ?>" required>
-                        <div class="invalid-feedback">Please provide your company name.</div>
                     </div>
                     <div class="mb-3">
                         <label for="company_industry" class="form-label">Industry</label>
@@ -275,19 +265,17 @@ $algerian_wilayas = [
                         <label for="contact_email" class="form-label required-field">Contact Email</label>
                         <input type="email" class="form-control" id="contact_email" name="contact_email" 
                                value="<?= htmlspecialchars($recruiter_info['email'] ?? $_SESSION['user_email'] ?? '') ?>" required>
-                        <div class="invalid-feedback">Please provide a valid email address.</div>
                     </div>
                     <div class="mb-3">
                         <label for="contact_phone" class="form-label required-field">Contact Phone</label>
                         <input type="tel" class="form-control" id="contact_phone" name="contact_phone" 
                                value="<?= htmlspecialchars($recruiter_info['phone'] ?? '') ?>" required>
-                        <div class="invalid-feedback">Please provide your phone number.</div>
                     </div>
                 </div>
             </div>
 
             <!-- Job Information -->
-            <div class="card mb-4 animate__animated animate__fadeIn">
+            <div class="card mb-4">
                 <div class="card-header bg-primary text-white">
                     <h5 class="card-title mb-0">Job Information</h5>
                 </div>
@@ -295,7 +283,6 @@ $algerian_wilayas = [
                     <div class="mb-3">
                         <label for="job_title" class="form-label required-field">Job Title</label>
                         <input type="text" class="form-control" id="job_title" name="job_title" required>
-                        <div class="invalid-feedback">Please provide the job title.</div>
                     </div>
                     
                     <div class="mb-3">
@@ -308,10 +295,9 @@ $algerian_wilayas = [
                             </div>
                             <div class="col-md-5 position-relative">
                                 <input type="text" class="form-control" id="state" name="state" 
-                                       value="<?= !empty($company_info['location']) ? trim(explode(',', $company_info['location'])[1]) : '' ?>" 
+                                       value="<?= !empty($company_info['location']) ? trim(explode(',', $company_info['location'])[0]) : '' ?>" 
                                        placeholder="Wilaya (State)" required autocomplete="off">
                                 <div class="wilaya-suggestions" id="wilaya-suggestions"></div>
-                                <div class="invalid-feedback">Please select a wilaya.</div>
                             </div>
                         </div>
                     </div>
@@ -326,7 +312,6 @@ $algerian_wilayas = [
                             <option value="Temporary">Temporary</option>
                             <option value="Internship">Internship</option>
                         </select>
-                        <div class="invalid-feedback">Please select a contract type.</div>
                     </div>
                     
                     <div class="mb-3">
@@ -359,13 +344,12 @@ $algerian_wilayas = [
                     <div class="mb-3">
                         <label for="job_description" class="form-label required-field">Job Description</label>
                         <textarea class="form-control" id="job_description" name="job_description" rows="5" required></textarea>
-                        <div class="invalid-feedback">Please provide a job description.</div>
                     </div>
                 </div>
             </div>
 
-            <div class="d-grid gap-2 animate__animated animate__fadeIn">
-                <button type="submit" class="btn btn-primary btn-lg">Post Job</button>
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary btn-lg">Submit for Approval</button>
                 <a href="dashboard.php" class="btn btn-secondary btn-lg">Cancel</a>
             </div>
         </form>
@@ -378,59 +362,30 @@ $algerian_wilayas = [
         // Form validation
         (function () {
             'use strict'
-            
             const forms = document.querySelectorAll('.needs-validation')
-            
             Array.from(forms).forEach(form => {
                 form.addEventListener('submit', event => {
                     if (!form.checkValidity()) {
                         event.preventDefault()
                         event.stopPropagation()
                     }
-                    
                     form.classList.add('was-validated')
                 }, false)
             })
         })();
 
-        // Enhanced Wilaya selection with animations
+        // Wilaya autocomplete
         document.addEventListener('DOMContentLoaded', function() {
             const stateInput = document.getElementById('state');
             const suggestionsContainer = document.getElementById('wilaya-suggestions');
             const wilayas = <?php echo json_encode($algerian_wilayas); ?>;
-            let highlightedIndex = -1;
             
-            // Highlight matching characters in suggestion
-            function highlightMatch(text, query) {
-                if (!query) return text;
-                
-                const regex = new RegExp(`(${escapeRegExp(query)})`, 'gi');
-                return text.replace(regex, '<span class="wilaya-match">$1</span>');
-            }
-            
-            // Escape special regex characters
-            function escapeRegExp(string) {
-                return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            }
-            
-            // Show suggestions with animation
-            function showSuggestions() {
-                suggestionsContainer.classList.add('show');
-            }
-            
-            // Hide suggestions with animation
-            function hideSuggestions() {
-                suggestionsContainer.classList.remove('show');
-                highlightedIndex = -1;
-            }
-            
-            // Update suggestions based on input
-            function updateSuggestions() {
-                const input = stateInput.value.toLowerCase();
+            stateInput.addEventListener('input', function() {
+                const input = this.value.toLowerCase();
                 suggestionsContainer.innerHTML = '';
                 
                 if (input.length < 1) {
-                    hideSuggestions();
+                    suggestionsContainer.style.display = 'none';
                     return;
                 }
                 
@@ -439,92 +394,26 @@ $algerian_wilayas = [
                 );
                 
                 if (matches.length > 0) {
-                    matches.forEach((wilaya, index) => {
+                    matches.forEach(wilaya => {
                         const div = document.createElement('div');
                         div.className = 'wilaya-item';
-                        div.innerHTML = highlightMatch(wilaya, stateInput.value);
+                        div.textContent = wilaya;
                         div.addEventListener('click', function() {
                             stateInput.value = wilaya;
-                            hideSuggestions();
+                            suggestionsContainer.style.display = 'none';
                         });
-                        
-                        // Highlight on hover
-                        div.addEventListener('mouseenter', function() {
-                            document.querySelectorAll('.wilaya-item').forEach(item => {
-                                item.classList.remove('highlight');
-                            });
-                            div.classList.add('highlight');
-                            highlightedIndex = index;
-                        });
-                        
                         suggestionsContainer.appendChild(div);
                     });
-                    showSuggestions();
+                    suggestionsContainer.style.display = 'block';
                 } else {
-                    hideSuggestions();
+                    suggestionsContainer.style.display = 'none';
                 }
-            }
-            
-            // Keyboard navigation
-            stateInput.addEventListener('keydown', function(e) {
-                const items = document.querySelectorAll('.wilaya-item');
-                
-                if (e.key === 'ArrowDown') {
-                    e.preventDefault();
-                    if (items.length > 0) {
-                        highlightedIndex = (highlightedIndex + 1) % items.length;
-                        items.forEach((item, i) => {
-                            item.classList.toggle('highlight', i === highlightedIndex);
-                        });
-                        if (items[highlightedIndex]) {
-                            items[highlightedIndex].scrollIntoView({ block: 'nearest' });
-                        }
-                    }
-                } else if (e.key === 'ArrowUp') {
-                    e.preventDefault();
-                    if (items.length > 0) {
-                        highlightedIndex = (highlightedIndex - 1 + items.length) % items.length;
-                        items.forEach((item, i) => {
-                            item.classList.toggle('highlight', i === highlightedIndex);
-                        });
-                        if (items[highlightedIndex]) {
-                            items[highlightedIndex].scrollIntoView({ block: 'nearest' });
-                        }
-                    }
-                } else if (e.key === 'Enter' && highlightedIndex >= 0) {
-                    e.preventDefault();
-                    if (items[highlightedIndex]) {
-                        stateInput.value = items[highlightedIndex].textContent;
-                        hideSuggestions();
-                    }
-                } else if (e.key === 'Escape') {
-                    hideSuggestions();
-                }
-            });
-            
-            // Show suggestions when input is focused
-            stateInput.addEventListener('focus', function() {
-                if (stateInput.value) {
-                    updateSuggestions();
-                }
-            });
-            
-            // Update suggestions as user types
-            stateInput.addEventListener('input', function() {
-                updateSuggestions();
             });
             
             // Hide suggestions when clicking outside
             document.addEventListener('click', function(e) {
                 if (!stateInput.contains(e.target) && !suggestionsContainer.contains(e.target)) {
-                    hideSuggestions();
-                }
-            });
-            
-            // Close suggestions when a selection is made
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Tab' && suggestionsContainer.classList.contains('show')) {
-                    hideSuggestions();
+                    suggestionsContainer.style.display = 'none';
                 }
             });
         });
