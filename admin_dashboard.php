@@ -1,5 +1,4 @@
 <?php
-
 // admin_dashboard.php
 include "connexion/config.php";
 define('SECURE_ACCESS', true);
@@ -73,29 +72,29 @@ if (!isset($_SESSION['user_email']) || $_SESSION['user_type'] !== 'admin') {
             <h4>Admin Dashboard</h4>
             <hr>
           </div>
-          <ul class="nav flex-column">
+          <ul class="nav flex-column" id="adminTabs">
             <li class="nav-item">
-              <a class="nav-link active" href="#dashboard" data-bs-toggle="tab">
+              <a class="nav-link active" href="#dashboard" data-bs-toggle="tab" data-bs-target="#dashboard">
                 <i class="fas fa-tachometer-alt me-2"></i>Dashboard
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="#pending-jobs" data-bs-toggle="tab">
+              <a class="nav-link" href="#pending-jobs" data-bs-toggle="tab" data-bs-target="#pending-jobs">
                 <i class="fas fa-briefcase me-2"></i>Pending Jobs
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="#manage-candidates" data-bs-toggle="tab">
+              <a class="nav-link" href="#manage-candidates" data-bs-toggle="tab" data-bs-target="#manage-candidates">
                 <i class="fas fa-users me-2"></i>Manage Candidates
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="#manage-recruiters" data-bs-toggle="tab">
+              <a class="nav-link" href="#manage-recruiters" data-bs-toggle="tab" data-bs-target="#manage-recruiters">
                 <i class="fas fa-user-tie me-2"></i>Manage Recruiters
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="#approved-jobs" data-bs-toggle="tab">
+              <a class="nav-link" href="#approved-jobs" data-bs-toggle="tab" data-bs-target="#approved-jobs">
                 <i class="fas fa-check-circle me-2"></i>Approved Jobs
               </a>
             </li>
@@ -124,7 +123,7 @@ if (!isset($_SESSION['user_email']) || $_SESSION['user_type'] !== 'admin') {
                     $total_candidates = $conn->query("SELECT COUNT(*) as count FROM users WHERE type = 'candidat'")->fetch_assoc();
                     ?>
                     <h2 class="card-text"><?php echo $total_candidates['count']; ?></h2>
-                    <a href="#manage-candidates" class="text-white" data-bs-toggle="tab">View Details</a>
+                    <a href="#manage-candidates" class="text-white" data-bs-toggle="tab" data-bs-target="#manage-candidates">View Details</a>
                   </div>
                 </div>
               </div>
@@ -137,7 +136,7 @@ if (!isset($_SESSION['user_email']) || $_SESSION['user_type'] !== 'admin') {
                     $total_recruiters = $conn->query("SELECT COUNT(*) as count FROM recruiter")->fetch_assoc();
                     ?>
                     <h2 class="card-text"><?php echo $total_recruiters['count']; ?></h2>
-                    <a href="#manage-recruiters" class="text-dark" data-bs-toggle="tab">View Details</a>
+                    <a href="#manage-recruiters" class="text-dark" data-bs-toggle="tab" data-bs-target="#manage-recruiters">View Details</a>
                   </div>
                 </div>
               </div>
@@ -150,7 +149,7 @@ if (!isset($_SESSION['user_email']) || $_SESSION['user_type'] !== 'admin') {
                     $total_jobs = $conn->query("SELECT COUNT(*) as count FROM job")->fetch_assoc();
                     ?>
                     <h2 class="card-text"><?php echo $total_jobs['count']; ?></h2>
-                    <a href="#approved-jobs" class="text-white" data-bs-toggle="tab">View Details</a>
+                    <a href="#approved-jobs" class="text-white" data-bs-toggle="tab" data-bs-target="#approved-jobs">View Details</a>
                   </div>
                 </div>
               </div>
@@ -175,7 +174,7 @@ if (!isset($_SESSION['user_email']) || $_SESSION['user_type'] !== 'admin') {
                       <?php
                       // Get recent job postings
                       $recent_jobs = $conn->query("
-                        SELECT 'Job' as type, 'Posted' as action, r.full_name as name, j.created_at as date 
+                        SELECT 'Job' as type, 'Posted' as action, r.first_name as name, j.created_at as date 
                         FROM job j 
                         JOIN recruiter r ON j.recruiter_id = r.id 
                         ORDER BY j.created_at DESC LIMIT 3
@@ -244,7 +243,7 @@ if (!isset($_SESSION['user_email']) || $_SESSION['user_type'] !== 'admin') {
                         SELECT j.id, j.title, j.type_contract, j.salary, j.created_at,
                         r.full_name as recruiter_name, c.name as company_name
                         FROM job j
-                        JOIN recruter r ON j.recruter_id = r.id
+                        JOIN recruiter r ON j.recruiter_id = r.id
                         JOIN company c ON r.company_id = c.id
                         ORDER BY j.created_at DESC
                       ");
@@ -473,99 +472,107 @@ if (!isset($_SESSION['user_email']) || $_SESSION['user_type'] !== 'admin') {
     </div>
   </div>
 
-  <!--<script src="assets/JS/bootstrap.bundle.min.js"></script>
-  <script src="assets/JS/jquery-3.6.0.min.js"></script> -->
-    <script src="assets/JS/jquery-3.7.1.js"></script>
-    <script src="assets/JS/bootstrap.min.js"></script>
-    <script src="assets/icons/all.min.js"></script>
-    <script>
-    // Approve Job
-    function approveJob(jobId) {
-      if(confirm("Are you sure you want to approve this job posting?")) {
-        $.post("admin_actions.php", { action: "approve_job", job_id: jobId }, function(data) {
-          if(data.success) {
-            alert("Job approved successfully!");
-            location.reload();
-          } else {
-            alert("Error: " + data.message);
-          }
-        }, "json");
+  <!-- Load jQuery first -->
+  <script src="assets/JS/jquery-3.7.1.js"></script>
+  <!-- Then load Bootstrap bundle (includes Popper and Bootstrap JS) -->
+  <script src="assets/JS/bootstrap.bundle.min.js"></script>
+  <script src="assets/icons/all.min.js"></script>
+
+  <script>
+  // Initialize tabs
+  $(document).ready(function(){
+      // Enable tab switching
+      $('a[data-bs-toggle="tab"]').on('click', function (e) {
+          e.preventDefault();
+          $(this).tab('show');
+      });
+      
+      // Approve Job
+      function approveJob(jobId) {
+        if(confirm("Are you sure you want to approve this job posting?")) {
+          $.post("admin_actions.php", { action: "approve_job", job_id: jobId }, function(data) {
+            if(data.success) {
+              alert("Job approved successfully!");
+              location.reload();
+            } else {
+              alert("Error: " + data.message);
+            }
+          }, "json");
+        }
       }
-    }
-    
-    // Reject Job
-    function rejectJob(jobId) {
-      if(confirm("Are you sure you want to reject this job posting?")) {
-        $.post("admin_actions.php", { action: "reject_job", job_id: jobId }, function(data) {
-          if(data.success) {
-            alert("Job rejected successfully!");
-            location.reload();
-          } else {
-            alert("Error: " + data.message);
-          }
-        }, "json");
+      
+      // Reject Job
+      function rejectJob(jobId) {
+        if(confirm("Are you sure you want to reject this job posting?")) {
+          $.post("admin_actions.php", { action: "reject_job", job_id: jobId }, function(data) {
+            if(data.success) {
+              alert("Job rejected successfully!");
+              location.reload();
+            } else {
+              alert("Error: " + data.message);
+            }
+          }, "json");
+        }
       }
-    }
-    
-    // Delete Job
-    function deleteJob(jobId) {
-      if(confirm("Are you sure you want to delete this job posting? This cannot be undone.")) {
-        $.post("admin_actions.php", { action: "delete_job", job_id: jobId }, function(data) {
-          if(data.success) {
-            alert("Job deleted successfully!");
-            location.reload();
-          } else {
-            alert("Error: " + data.message);
-          }
-        }, "json");
+      
+      // Delete Job
+      function deleteJob(jobId) {
+        if(confirm("Are you sure you want to delete this job posting? This cannot be undone.")) {
+          $.post("admin_actions.php", { action: "delete_job", job_id: jobId }, function(data) {
+            if(data.success) {
+              alert("Job deleted successfully!");
+              location.reload();
+            } else {
+              alert("Error: " + data.message);
+            }
+          }, "json");
+        }
       }
-    }
-    
-    // Toggle Candidate Status
-    function toggleCandidateStatus(userId, currentStatus) {
-      const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
-      if(confirm(`Are you sure you want to ${newStatus === 'active' ? 'activate' : 'deactivate'} this candidate?`)) {
-        $.post("admin_actions.php", { action: "toggle_candidate_status", user_id: userId, new_status: newStatus }, function(data) {
-          if(data.success) {
-            alert("Candidate status updated successfully!");
-            location.reload();
-          } else {
-            alert("Error: " + data.message);
-          }
-        }, "json");
+      
+      // Toggle Candidate Status
+      function toggleCandidateStatus(userId, currentStatus) {
+        const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+        if(confirm(`Are you sure you want to ${newStatus === 'active' ? 'activate' : 'deactivate'} this candidate?`)) {
+          $.post("admin_actions.php", { action: "toggle_candidate_status", user_id: userId, new_status: newStatus }, function(data) {
+            if(data.success) {
+              alert("Candidate status updated successfully!");
+              location.reload();
+            } else {
+              alert("Error: " + data.message);
+            }
+          }, "json");
+        }
       }
-    }
-    
-    // Delete Candidate
-    function confirmDeleteCandidate(userId) {
-      if(confirm("Are you sure you want to delete this candidate? All their data (applications, CV, etc.) will also be deleted.")) {
-        $.post("admin_actions.php", { action: "delete_candidate", user_id: userId }, function(data) {
-          if(data.success) {
-            alert("Candidate deleted successfully!");
-            location.reload();
-          } else {
-            alert("Error: " + data.message);
-          }
-        }, "json");
+      
+      // Delete Candidate
+      function confirmDeleteCandidate(userId) {
+        if(confirm("Are you sure you want to delete this candidate? All their data (applications, CV, etc.) will also be deleted.")) {
+          $.post("admin_actions.php", { action: "delete_candidate", user_id: userId }, function(data) {
+            if(data.success) {
+              alert("Candidate deleted successfully!");
+              location.reload();
+            } else {
+              alert("Error: " + data.message);
+            }
+          }, "json");
+        }
       }
-    }
-    
-    // Delete Recruiter
-    function confirmDeleteRecruiter(recruiterId) {
-      if(confirm("Are you sure you want to delete this recruiter? All their job postings will also be deleted.")) {
-        $.post("admin_actions.php", { action: "delete_recruiter", recruiter_id: recruiterId }, function(data) {
-          if(data.success) {
-            alert("Recruiter deleted successfully!");
-            location.reload();
-          } else {
-            alert("Error: " + data.message);
-          }
-        }, "json");
+      
+      // Delete Recruiter
+      function confirmDeleteRecruiter(recruiterId) {
+        if(confirm("Are you sure you want to delete this recruiter? All their job postings will also be deleted.")) {
+          $.post("admin_actions.php", { action: "delete_recruiter", recruiter_id: recruiterId }, function(data) {
+            if(data.success) {
+              alert("Recruiter deleted successfully!");
+              location.reload();
+            } else {
+              alert("Error: " + data.message);
+            }
+          }, "json");
+        }
       }
-    }
-    
-    // Search functionality
-    $(document).ready(function() {
+      
+      // Search functionality
       // Candidate search
       $("#candidateSearch").on("keyup", function() {
         var value = $(this).val().toLowerCase();
@@ -589,7 +596,7 @@ if (!isset($_SESSION['user_email']) || $_SESSION['user_type'] !== 'admin') {
       $("#searchRecruiterButton").click(function() {
         $("#recruiterSearch").trigger("keyup");
       });
-    });
+  });
   </script>
-    </body>
+</body>
 </html>
