@@ -11,7 +11,7 @@ if (!isset($_SESSION['user_email'])) {
 
 if (isset($_SESSION['user_email'])) {
   if (isset($_SESSION['user_type'])) {
-    if ($_SESSION['user_type'] == "recruiter") {  
+    if ($_SESSION['user_type'] == "recruiter") {
       $stmt = $conn->prepare("SELECT first_name, last_name, address, profile_picture , company_id FROM recruiter WHERE email = ?");
     } else if ($_SESSION['user_type'] == "candidat" || $_SESSION['user_type'] == "admin") {
       $stmt = $conn->prepare("SELECT first_name, last_name, address, phone, cv, sexe, about, profile_picture FROM users WHERE email = ?");
@@ -24,21 +24,23 @@ if (isset($_SESSION['user_email'])) {
 $email = $_SESSION['user_email'];
 $stmt->bind_param("s", $email);
 $stmt->execute();
-if ($_SESSION['user_type'] == "recruiter") {  
+if ($_SESSION['user_type'] == "recruiter") {
   $stmt->bind_result($first_name, $last_name, $address, $profile_picture, $company_id);
 } else if ($_SESSION['user_type'] == "candidat" || $_SESSION['user_type'] == "admin") {
   $stmt->bind_result($first_name, $last_name, $address, $phone, $cv, $sexe, $about, $profile_picture);
 }
 $stmt->store_result();
 $stmt->fetch();
-if ($_SESSION['user_type'] == "recruiter") {  
-  if($company_id != null){
+if ($_SESSION['user_type'] == "recruiter") {
+  if ($company_id != null) {
     $stmt = $conn->prepare("SELECT name FROM company WHERE id = ?");
     $stmt->bind_param("i", $company_id);
     $stmt->execute();
     $stmt->bind_result($company_name);
     $stmt->fetch();
-}
+  } else {
+    $company_name = null;
+  }
 }
 $stmt->close();
 
@@ -118,37 +120,43 @@ if (!$profile_picture) {
               <input type="text" id="address" name="address" class="form-control" value="<?php echo $address; ?>" readonly required>
             </div>
 
-            <?php 
-if ($_SESSION['user_type'] == "recruiter") {
-  ?> 
-            <div class="form-group">
-              <label for="company">company</label>
-              <input type="text" id="company" name="company" class="form-control" value="<?php echo $company_name; ?>" readonly required>
-            </div>  
-  <?php
-}elseif ($_SESSION['user_type'] == "candidat" || $_SESSION['user_type'] == "admin") {
-  ?>
-            <div class="form-group">
-              <label for="phone">Phone</label>
-              <input type="tel" id="phone" name="phone" class="form-control" value="<?php echo $phone; ?>" readonly required pattern="[0-9]{8,15}">
-            </div>
-            <div class="form-group">
-              <label>Gender</label><br>
-              <label for="man">Man</label>
-              <input type="radio" id="man" name="sexe" value="man" class="mx-2" <?php if ($sexe == 'man') echo "checked"; ?> disabled>
-              <label for="woman">Woman</label>
-              <input type="radio" id="woman" name="sexe" value="woman" class="mx-2" <?php if ($sexe == 'woman') echo "checked"; ?> disabled>
-            </div>
-            <div class="form-group">
-              <label for="about">About</label>
-              <textarea id="about" name="about" class="form-control" rows="4" readonly><?php echo $about; ?></textarea>
-            </div>
             <?php
-}
+            if ($_SESSION['user_type'] == "recruiter") {
             ?>
-            
-            
-            
+              <div class="form-group">
+                <label for="company">company</label>
+                <input type="text" id="company" name="company" class="form-control" value="<?php
+                                                                                            if ($company_name) {
+                                                                                              echo $company_name;
+                                                                                            } else {
+                                                                                              echo "Independent";
+                                                                                            }
+                                                                                            ?>" readonly required>
+              </div>
+            <?php
+            } elseif ($_SESSION['user_type'] == "candidat" || $_SESSION['user_type'] == "admin") {
+            ?>
+              <div class="form-group">
+                <label for="phone">Phone</label>
+                <input type="tel" id="phone" name="phone" class="form-control" value="<?php echo $phone; ?>" readonly required pattern="[0-9]{8,15}">
+              </div>
+              <div class="form-group">
+                <label>Gender</label><br>
+                <label for="man">Man</label>
+                <input type="radio" id="man" name="sexe" value="man" class="mx-2" <?php if ($sexe == 'man') echo "checked"; ?> disabled>
+                <label for="woman">Woman</label>
+                <input type="radio" id="woman" name="sexe" value="woman" class="mx-2" <?php if ($sexe == 'woman') echo "checked"; ?> disabled>
+              </div>
+              <div class="form-group">
+                <label for="about">About</label>
+                <textarea id="about" name="about" class="form-control" rows="4" readonly><?php echo $about; ?></textarea>
+              </div>
+            <?php
+            }
+            ?>
+
+
+
             <div class="form-group mt-3">
               <button type="button" class="btn btn-primary" onclick="editProfile()">Edit</button>
               <button type="submit" class="btn btn-success" style="display: none;" id="save-btn">Save</button>
@@ -196,7 +204,17 @@ if ($_SESSION['user_type'] == "recruiter") {
 
           <!-- Buttons -->
           <div class="btn-group">
-            <a href="upload_cv.php" class="btn btn-primary"><?php echo $cv ? "Update CV" : "Upload CV"; ?></a>
+            <?php
+            if ($_SESSION['user_type'] == "candidat") {
+            ?>
+              <a href="upload_cv.php" class="btn btn-primary"><?php echo $cv ? "Update CV" : "Upload CV"; ?></a>
+            <?php
+            } else if ($_SESSION['user_type'] == "recruiter") {
+            ?>
+              <a href="post_a_job.php" class="btn btn-primary">Post Job</a>
+            <?php
+            }
+            ?>
             <a href="job_search.php" class="btn btn-outline-primary">Search Jobs</a>
           </div>
         </div>
