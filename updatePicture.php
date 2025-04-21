@@ -8,6 +8,7 @@ if (!isset($_SESSION['user_email'])) {
 }
 
 $email = $_SESSION['user_email'];
+$user_type = $_SESSION['user_type']; // This should be set during login ('candidat' or 'recruiter')
 
 // Check if file uploaded
 if (isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] == 0) {
@@ -16,6 +17,12 @@ if (isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] == 
 
     if (!in_array($fileType, $allowedTypes)) {
         echo "<script>alert('Only JPG, PNG, or GIF allowed.'); window.location.href='profile.php';</script>";
+        exit();
+    }
+
+    // Validate file size (e.g., 2MB max)
+    if ($_FILES['profile_picture']['size'] > 2000000) {
+        echo "<script>alert('File size too large. Max 2MB allowed.'); window.location.href='profile.php';</script>";
         exit();
     }
 
@@ -30,13 +37,22 @@ if (isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] == 
 
     // Move the uploaded file
     if (move_uploaded_file($_FILES["profile_picture"]["tmp_name"], $targetFile)) {
-        // Save to DB
-        $stmt = $conn->prepare("UPDATE users SET profile_picture = ? WHERE email = ?");
+        // Save to appropriate table based on user type
+        if ($user_type == 'recruiter') {
+            $stmt = $conn->prepare("UPDATE recruiter SET profile_picture = ? WHERE email = ?");
+        } else {
+            // Default to users table (candidates)
+            $stmt = $conn->prepare("UPDATE users SET profile_picture = ? WHERE email = ?");
+        }
+        
         $stmt->bind_param("ss", $targetFile, $email);
-        $stmt->execute();
+        
+        if ($stmt->execute()) {
+            echo "<script>alert('Profile picture updated!'); window.location.href='profile.php';</script>";
+        } else {
+            echo "<script>alert('Error updating database.'); window.location.href='profile.php';</script>";
+        }
         $stmt->close();
-
-        echo "<script>alert('Profile picture updated!'); window.location.href='profile.php';</script>";
     } else {
         echo "<script>alert('Error uploading file.'); window.location.href='profile.php';</script>";
     }

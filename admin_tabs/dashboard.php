@@ -1,166 +1,117 @@
-<div class="animate-fade">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="h4 fw-bold mb-0">Dashboard Overview</h2>
-    <div class="text-muted small"><?= date('l, F j, Y') ?></div>
-  </div>
+<?php
+// Get counts for dashboard
+$pending_jobs_count = $conn->query("SELECT COUNT(*) FROM job WHERE status = 'pending'")->fetch_row()[0];
+$approved_jobs_count = $conn->query("SELECT COUNT(*) FROM job WHERE status = 'approved'")->fetch_row()[0];
+$candidates_count = $conn->query("SELECT COUNT(*) FROM users WHERE type = 'candidat'")->fetch_row()[0];
+$recruiters_count = $conn->query("SELECT COUNT(*) FROM recruiter")->fetch_row()[0];
+?>
 
-  <div class="row g-4 mb-4">
-    <div class="col-md-6 col-lg-3">
-      <div class="card dashboard-card h-100">
-        <div class="card-body">
-          <div class="d-flex align-items-center">
-            <div class="bg-primary bg-opacity-10 p-3 rounded me-3">
-              <i class="fas fa-users text-primary fs-4"></i>
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card dashboard-card animate__animated animate__fadeIn animate__delay-1s">
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted">Pending Jobs</h6>
+                <h2 class="mb-3"><?= $pending_jobs_count ?></h2>
+                <a href="?tab=pending-jobs" class="card-link">View all <i class="fas fa-arrow-right"></i></a>
             </div>
-            <div>
-              <h6 class="mb-1">Total Candidates</h6>
-              <?php $count = $conn->query("SELECT COUNT(*) FROM users WHERE type = 'candidat'")->fetch_row()[0]; ?>
-              <h2 class="mb-0"><?= number_format($count) ?></h2>
-            </div>
-          </div>
         </div>
-      </div>
     </div>
-
-    <div class="col-md-6 col-lg-3">
-      <div class="card dashboard-card h-100">
-        <div class="card-body">
-          <div class="d-flex align-items-center">
-            <div class="bg-warning bg-opacity-10 p-3 rounded me-3">
-              <i class="fas fa-user-tie text-warning fs-4"></i>
+    <div class="col-md-3">
+        <div class="card dashboard-card animate__animated animate__fadeIn animate__delay-2s">
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted">Approved Jobs</h6>
+                <h2 class="mb-3"><?= $approved_jobs_count ?></h2>
+                <a href="?tab=approved-jobs" class="card-link">View all <i class="fas fa-arrow-right"></i></a>
             </div>
-            <div>
-              <h6 class="mb-1">Total Recruiters</h6>
-              <?php $count = $conn->query("SELECT COUNT(*) FROM recruiter")->fetch_row()[0]; ?>
-              <h2 class="mb-0"><?= number_format($count) ?></h2>
-            </div>
-          </div>
         </div>
-      </div>
     </div>
-
-    <div class="col-md-6 col-lg-3">
-      <div class="card dashboard-card h-100">
-        <div class="card-body">
-          <div class="d-flex align-items-center">
-            <div class="bg-danger bg-opacity-10 p-3 rounded me-3">
-              <i class="fas fa-hourglass-half text-danger fs-4"></i>
+    <div class="col-md-3">
+        <div class="card dashboard-card animate__animated animate__fadeIn animate__delay-3s">
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted">Candidates</h6>
+                <h2 class="mb-3"><?= $candidates_count ?></h2>
+                <a href="?tab=candidates" class="card-link">View all <i class="fas fa-arrow-right"></i></a>
             </div>
-            <div>
-              <h6 class="mb-1">Pending Jobs</h6>
-              <?php $count = $conn->query("SELECT COUNT(*) FROM job WHERE status = 'pending'")->fetch_row()[0]; ?>
-              <h2 class="mb-0"><?= number_format($count) ?></h2>
-            </div>
-          </div>
         </div>
-      </div>
     </div>
-
-    <div class="col-md-6 col-lg-3">
-      <div class="card dashboard-card h-100">
-        <div class="card-body">
-          <div class="d-flex align-items-center">
-            <div class="bg-success bg-opacity-10 p-3 rounded me-3">
-              <i class="fas fa-check-circle text-success fs-4"></i>
+    <div class="col-md-3">
+        <div class="card dashboard-card animate__animated animate__fadeIn animate__delay-4s">
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted">Recruiters</h6>
+                <h2 class="mb-3"><?= $recruiters_count ?></h2>
+                <a href="?tab=recruiters" class="card-link">View all <i class="fas fa-arrow-right"></i></a>
             </div>
-            <div>
-              <h6 class="mb-1">Approved Jobs</h6>
-              <?php $count = $conn->query("SELECT COUNT(*) FROM job WHERE status = 'approved'")->fetch_row()[0]; ?>
-              <h2 class="mb-0"><?= number_format($count) ?></h2>
-            </div>
-          </div>
         </div>
-      </div>
     </div>
-  </div>
+</div>
 
-  <div class="row">
-    <div class="col-lg-6 mb-4">
-      <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-          <h6 class="mb-0">Recent Job Approvals</h6>
-          <a href="?tab=approved-jobs" class="btn btn-sm btn-outline-primary">View All</a>
-        </div>
-        <div class="card-body p-0">
-          <div class="table-responsive">
-            <table class="table table-hover mb-0">
-              <thead>
-                <tr>
-                  <th>Job Title</th>
-                  <th>Company</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
+<div class="row">
+    <div class="col-md-6">
+        <div class="card animate__animated animate__fadeIn">
+            <div class="card-header">
+                <h5 class="mb-0">Recent Pending Jobs</h5>
+            </div>
+            <div class="card-body">
                 <?php
-                $jobs = $conn->query("
-                  SELECT j.title, c.name as company, j.status 
-                  FROM job j
-                  LEFT JOIN recruiter r ON j.recruiter_id = r.id
-                  LEFT JOIN company c ON r.company_id = c.id
-                  WHERE j.status IN ('approved', 'rejected')
-                  ORDER BY j.updated_at DESC LIMIT 5
-                ");
-                while ($job = $jobs->fetch_assoc()):
-                ?>
-                <tr>
-                  <td><?= htmlspecialchars($job['title']) ?></td>
-                  <td><?= htmlspecialchars($job['company'] ?? 'N/A') ?></td>
-                  <td>
-                    <span class="status-badge badge-<?= $job['status'] === 'approved' ? 'approved' : 'rejected' ?>">
-                      <?= ucfirst($job['status']) ?>
-                    </span>
-                  </td>
-                </tr>
-                <?php endwhile; ?>
-              </tbody>
-            </table>
-          </div>
+                $recent_pending = $conn->query("
+                    SELECT j.title, j.created_at, r.first_name, r.last_name 
+                    FROM job j
+                    JOIN recruiter r ON j.recruiter_id = r.id
+                    WHERE j.status = 'pending'
+                    ORDER BY j.created_at DESC
+                    LIMIT 5
+                ")->fetch_all(MYSQLI_ASSOC);
+                
+                if (empty($recent_pending)): ?>
+                    <div class="alert alert-info">No pending jobs found.</div>
+                <?php else: ?>
+                    <div class="list-group">
+                        <?php foreach ($recent_pending as $job): ?>
+                            <a href="?tab=pending-jobs" class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1"><?= htmlspecialchars($job['title']) ?></h6>
+                                    <small><?= date('M d', strtotime($job['created_at'])) ?></small>
+                                </div>
+                                <small>Posted by: <?= htmlspecialchars($job['first_name'].' '.$job['last_name']) ?></small>
+                            </a>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
         </div>
-      </div>
     </div>
-
-    <div class="col-lg-6 mb-4">
-      <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-          <h6 class="mb-0">Recent Candidate Registrations</h6>
-          <a href="?tab=candidates" class="btn btn-sm btn-outline-primary">View All</a>
-        </div>
-        <div class="card-body p-0">
-          <div class="table-responsive">
-            <table class="table table-hover mb-0">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
+    <div class="col-md-6">
+        <div class="card animate__animated animate__fadeIn">
+            <div class="card-header">
+                <h5 class="mb-0">Recently Approved Jobs</h5>
+            </div>
+            <div class="card-body">
                 <?php
-                $candidates = $conn->query("
-                  SELECT first_name, last_name, email, status 
-                  FROM users 
-                  WHERE type = 'candidat'
-                  ORDER BY created_at DESC LIMIT 5
-                ");
-                while ($candidate = $candidates->fetch_assoc()):
-                ?>
-                <tr>
-                  <td><?= htmlspecialchars($candidate['first_name'].' '.$candidate['last_name']) ?></td>
-                  <td><?= htmlspecialchars($candidate['email']) ?></td>
-                  <td>
-                    <span class="badge bg-<?= $candidate['status'] === 'active' ? 'success' : 'secondary' ?>">
-                      <?= ucfirst($candidate['status']) ?>
-                    </span>
-                  </td>
-                </tr>
-                <?php endwhile; ?>
-              </tbody>
-            </table>
-          </div>
+                $recent_approved = $conn->query("
+                    SELECT j.title, j.updated_at, r.first_name, r.last_name 
+                    FROM job j
+                    JOIN recruiter r ON j.recruiter_id = r.id
+                    WHERE j.status = 'approved'
+                    ORDER BY j.updated_at DESC
+                    LIMIT 5
+                ")->fetch_all(MYSQLI_ASSOC);
+                
+                if (empty($recent_approved)): ?>
+                    <div class="alert alert-info">No approved jobs found.</div>
+                <?php else: ?>
+                    <div class="list-group">
+                        <?php foreach ($recent_approved as $job): ?>
+                            <a href="?tab=approved-jobs" class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1"><?= htmlspecialchars($job['title']) ?></h6>
+                                    <small><?= date('M d', strtotime($job['updated_at'])) ?></small>
+                                </div>
+                                <small>Posted by: <?= htmlspecialchars($job['first_name'].' '.$job['last_name']) ?></small>
+                            </a>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
 </div>

@@ -20,22 +20,20 @@ if (!isset($_SESSION['user_type']) || $_SESSION['user_type'] !== 'recruiter') {
     exit();
 }
 
-// Get recruiter ID from users table
-$stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
-$stmt->bind_param("s", $_SESSION['user_email']);
-$stmt->execute();
-$stmt->bind_result($user_id);
-$stmt->fetch();
-$stmt->close();
-
-// Get recruiter details from recruiter table
+// Get recruiter details directly using the email
 $recruiter_info = [];
-$stmt = $conn->prepare("SELECT * FROM recruiter WHERE id = ?");
-$stmt->bind_param("i", $user_id);
+$stmt = $conn->prepare("SELECT * FROM recruiter WHERE email = ?");
+$stmt->bind_param("s", $_SESSION['user_email']);
 $stmt->execute();
 $result = $stmt->get_result();
 $recruiter_info = $result->fetch_assoc();
 $stmt->close();
+
+if (empty($recruiter_info)) {
+    die("Recruiter not found");
+}
+
+$recruiter_id = $recruiter_info['id'];
 
 // Get company info if available
 $company_info = [];
@@ -51,8 +49,8 @@ if (!empty($recruiter_info['company_id'])) {
 // Process form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
-        // Validate required fields (removed 'city' from requirements)
-        $required = ['company_name', 'job_title', 'state', 'contract_type', 'job_description'];
+        // Validate required fields
+        $required = ['company_name', 'job_title', 'state', 'contract_type', 'job_description', 'domain_name'];
         $missing_fields = [];
         
         foreach ($required as $field) {
@@ -67,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Sanitize inputs
         $company_name = $conn->real_escape_string(trim($_POST['company_name']));
-        $company_industry = $conn->real_escape_string(trim($_POST['company_industry'] ?? ''));
+        $domain_name = $conn->real_escape_string(trim($_POST['domain_name']));
         $company_description = $conn->real_escape_string(trim($_POST['company_description'] ?? ''));
         $company_website = $conn->real_escape_string(trim($_POST['company_website'] ?? ''));
         $contact_email = $conn->real_escape_string(trim($_POST['contact_email'] ?? ''));
@@ -78,10 +76,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $working_hours = $conn->real_escape_string(trim($_POST['working_hours'] ?? ''));
         $salary_amount = is_numeric($_POST['salary_amount'] ?? 0) ? floatval($_POST['salary_amount']) : 0;
         $job_description = $conn->real_escape_string(trim($_POST['job_description']));
-        $location = "$state, Algeria"; // Removed city from location string
+        $location = "$state, Algeria";
 
         // Begin transaction
         $conn->begin_transaction();
+
+        // Check if domain exists or create new one
+        $stmt = $conn->prepare("SELECT id FROM domain WHERE name = ?");
+        $stmt->bind_param("s", $domain_name);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $domain = $result->fetch_assoc();
+        $stmt->close();
+
+        if (empty($domain)) {
+            // Create new domain
+            $stmt = $conn->prepare("INSERT INTO domain (name) VALUES (?)");
+            $stmt->bind_param("s", $domain_name);
+            $stmt->execute();
+            $domain_id = $stmt->insert_id;
+            $stmt->close();
+        } else {
+            $domain_id = $domain['id'];
+        }
 
         // Check if company exists or create new one
         if (!empty($recruiter_info['company_id'])) {
@@ -93,26 +110,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 name = ?, 
                 location = ?, 
                 description = ?, 
+                website = ?,
+                domain_id = ?,
                 updated_at = NOW()
                 WHERE id = ?
             ");
-            $stmt->bind_param("sssi", $company_name, $location, $company_description, $company_id);
+            $stmt->bind_param("ssssii", $company_name, $location, $company_description, $company_website, $domain_id, $company_id);
             $stmt->execute();
             $stmt->close();
         } else {
             // Create new company
             $stmt = $conn->prepare("
-                INSERT INTO company (name, location, description, website, created_at, updated_at)
-                VALUES (?, ?, ?, ?, NOW(), NOW())
+                INSERT INTO company (name, location, description, website, domain_id, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, NOW(), NOW())
             ");
-            $stmt->bind_param("ssss", $company_name, $location, $company_description, $company_website);
+            $stmt->bind_param("ssssi", $company_name, $location, $company_description, $company_website, $domain_id);
             $stmt->execute();
             $company_id = $stmt->insert_id;
             $stmt->close();
             
             // Update recruiter's company association
             $stmt = $conn->prepare("UPDATE recruiter SET company_id = ? WHERE id = ?");
-            $stmt->bind_param("ii", $company_id, $user_id);
+            $stmt->bind_param("ii", $company_id, $recruiter_id);
             $stmt->execute();
             $stmt->close();
         }
@@ -127,7 +146,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ?, NOW(), NOW(), 'pending'
             )
         ");
-        $stmt->bind_param("sssdi", $job_title, $job_description, $contract_type, $salary_amount, $user_id);
+        $stmt->bind_param("sssdi", $job_title, $job_description, $contract_type, $salary_amount, $recruiter_id);
         $stmt->execute();
         $job_id = $stmt->insert_id;
         $stmt->close();
@@ -138,7 +157,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             INSERT INTO notifications (user_id, admin_id, message, type, related_id, created_at)
             VALUES (?, (SELECT id FROM users WHERE type = 'admin' LIMIT 1), ?, 'job_approval', ?, NOW())
         ");
-        $stmt->bind_param("isi", $user_id, $notification_message, $job_id);
+        $stmt->bind_param("isi", $recruiter_id, $notification_message, $job_id);
         $stmt->execute();
         $stmt->close();
 
@@ -248,9 +267,10 @@ $algerian_wilayas = [
                                value="<?= htmlspecialchars($company_info['name'] ?? '') ?>" required>
                     </div>
                     <div class="mb-3">
-                        <label for="company_industry" class="form-label">Industry</label>
-                        <input type="text" class="form-control" id="company_industry" name="company_industry" 
-                               placeholder="e.g., Technology, Healthcare, Finance">
+                        <label for="domain_name" class="form-label required-field">Domain</label>
+                        <input type="text" class="form-control" id="domain_name" name="domain_name" 
+                               value="<?= htmlspecialchars($company_info['domain_name'] ?? '') ?>" 
+                               placeholder="e.g., Technology, Healthcare, Finance" required>
                     </div>
                     <div class="mb-3">
                         <label for="company_description" class="form-label">Company Description</label>
