@@ -3,60 +3,76 @@ include "connexion/config.php";
 define('SECURE_ACCESS', true);
 session_start();
 
-// Check if user is logged in as recruiter
-if (!isset($_SESSION['user_email'])){
+if (!isset($_SESSION['user_email'])) {
     header("Location: login.php");
     exit();
 }
 
-// Get filter parameters
-$keyword = isset($_GET['keyword']) ? $_GET['keyword'] : '';
-$location = isset($_GET['location']) ? $_GET['location'] : '';
-$experience = isset($_GET['experience']) ? $_GET['experience'] : '';
-$skills = isset($_GET['skills']) ? $_GET['skills'] : '';
-$education = isset($_GET['education']) ? $_GET['education'] : '';
+// Debug mode - uncomment these to see errors
+// error_reporting(E_ALL);
+// ini_set('display_errors', 1);
 
-// Build SQL query with filters
-$query = "SELECT u.id, u.first_name, u.last_name, u.address, u.profile_picture, u.phone, u.email, u.about,
-                 GROUP_CONCAT(DISTINCT e.speciality) AS specialities,
-                 GROUP_CONCAT(DISTINCT e.level) AS education_levels,
-                 GROUP_CONCAT(DISTINCT s.content) AS skills_list
-          FROM users u
-          LEFT JOIN education e ON u.id = e.user_id
-          LEFT JOIN skills s ON u.id = s.user_id
-          WHERE u.type = 'candidat' AND u.status = 'active' AND u.cv IS NOT NULL";
+// Get filter parameters
+$keyword = isset($_GET['keyword']) ? trim($_GET['keyword']) : '';
+$location = isset($_GET['location']) ? trim($_GET['location']) : '';
+$experience = isset($_GET['experience']) ? trim($_GET['experience']) : '';
+$skills = isset($_GET['skills']) ? trim($_GET['skills']) : '';
+$education = isset($_GET['education']) ? trim($_GET['education']) : '';
+
+// Main query to get candidates
+$query = "SELECT 
+    u.id, u.first_name, u.last_name, u.address, u.profile_picture, 
+    u.phone, u.email, u.about, u.cv,
+    GROUP_CONCAT(DISTINCT e.speciality) AS specialities,
+    GROUP_CONCAT(DISTINCT e.level) AS education_levels,
+    GROUP_CONCAT(DISTINCT s.content) AS skills_list,
+    GROUP_CONCAT(DISTINCT exp.job_name) AS job_titles
+FROM users u
+LEFT JOIN education e ON u.id = e.user_id
+LEFT JOIN skills s ON u.id = s.user_id
+LEFT JOIN experience exp ON u.id = exp.user_id
+WHERE u.type = 'candidat' 
+AND u.status = 'active' 
+AND u.cv IS NOT NULL
+";
 
 $conditions = [];
 $params = [];
+$types = '';
 
 if (!empty($keyword)) {
-    $conditions[] = "(u.first_name LIKE ? OR u.last_name LIKE ? OR e.speciality LIKE ? OR s.content LIKE ? OR u.about LIKE ?)";
-    $params = array_merge($params, ["%$keyword%", "%$keyword%", "%$keyword%", "%$keyword%", "%$keyword%"]);
+    $conditions[] = "(u.first_name LIKE ? OR u.last_name LIKE ? OR e.speciality LIKE ? OR s.content LIKE ? OR u.about LIKE ? OR exp.job_name LIKE ?)";
+    $searchTerm = "%$keyword%";
+    $params = array_merge($params, [$searchTerm, $searchTerm, $searchTerm, $searchTerm, $searchTerm, $searchTerm]);
+    $types .= str_repeat('s', 6);
 }
-
-
 
 if (!empty($location)) {
     $conditions[] = "u.address LIKE ?";
     $params[] = "%$location%";
+    $types .= 's';
 }
 
 if (!empty($experience)) {
     $conditions[] = "e.level IN (?)";
     $params[] = $experience == 'senior' ? 'Master,Doctorat,Ingeniorat' : ($experience == 'mid' ? 'Licence,Master' : 'BAC');
+    $types .= 's';
 }
 
 if (!empty($education)) {
     $conditions[] = "e.level = ?";
     $params[] = $education == 'bachelor' ? 'Licence' : ($education == 'master' ? 'Master' : 'Doctorat');
+    $types .= 's';
 }
 
 if (!empty($skills)) {
     $skillsArray = explode(',', $skills);
     $skillConditions = [];
     foreach ($skillsArray as $skill) {
+        $skill = trim($skill);
         $skillConditions[] = "s.content LIKE ?";
         $params[] = "%$skill%";
+        $types .= 's';
     }
     $conditions[] = "(" . implode(' OR ', $skillConditions) . ")";
 }
@@ -71,7 +87,6 @@ $query .= " GROUP BY u.id";
 $stmt = $conn->prepare($query);
 if ($stmt) {
     if (!empty($params)) {
-        $types = str_repeat('s', count($params));
         $stmt->bind_param($types, ...$params);
     }
     $stmt->execute();
@@ -79,7 +94,7 @@ if ($stmt) {
     $candidates = $result->fetch_all(MYSQLI_ASSOC);
     $stmt->close();
 } else {
-    $candidates = [];
+    die("Database error: " . $conn->error);
 }
 
 // Get all skills for autocomplete
@@ -90,487 +105,208 @@ $all_skills = $skills_result->fetch_all(MYSQLI_ASSOC);
 
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Search for a Candidate - CareerConnect</title>
-    <link rel="stylesheet" href="assets/CSS/bootstrap.min.css" />
-    <link rel="stylesheet" href="assets/CSS/style.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="icon" type="image/png" href="./assets/images/hamidou.png" width="8" />
-    <script src="assets/JS/jquery-3.7.1.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search for Candidates - CareerConnect</title>
+    <link rel="stylesheet" href="assets/CSS/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/icons/all.min.css">
+    <link rel="stylesheet" href="assets/CSS/style.css">
+    <link rel="icon" type="image/png" href="./assets/images/hamidou.png" width="8">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.css">
     <style>
-        :root {
-            --primary-color: #3a0ca3;
-            --secondary-color: #4cc9f0;
-            --accent-color: #f72585;
-            --light-bg: #f8f9fa;
-            --dark-text: #212529;
-        }
-        
-        .filter-section {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-            transition: all 0.3s ease;
-        }
-        
-        .filter-section:hover {
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
-            transform: translateY(-2px);
-        }
-
-        .filter-section h5 {
-            color: var(--primary-color);
-            font-weight: bold;
-            margin-bottom: 20px;
-            position: relative;
-            padding-bottom: 10px;
-        }
-        
-        .filter-section h5::after {
-            content: '';
-            position: absolute;
-            left: 0;
-            bottom: 0;
-            width: 50px;
-            height: 3px;
-            background: var(--accent-color);
-            border-radius: 3px;
-        }
-
-        .filter-section .form-label {
-            font-weight: 600;
-            color: var(--dark-text);
-            margin-bottom: 8px;
-        }
-
-        .filter-section .form-control,
-        .filter-section .form-select,
-        .filter-section .select2-selection {
-            border-radius: 10px;
-            border: 1px solid #e0e0e0;
-            padding: 12px 15px;
-            transition: all 0.3s ease;
-        }
-        
-        .filter-section .form-control:focus,
-        .filter-section .form-select:focus {
-            border-color: var(--secondary-color);
-            box-shadow: 0 0 0 0.25rem rgba(74, 201, 240, 0.25);
-        }
-
-        .candidate-card {
+        .job-card {
             border: none;
-            border-radius: 15px;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
             height: 100%;
-            overflow: hidden;
-            background: white;
-            position: relative;
         }
         
-        .candidate-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 5px;
-            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+        .job-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.1);
         }
-
-        .candidate-card:hover {
-            transform: translateY(-10px) scale(1.02);
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
-        }
-
-        .candidate-card img {
+        
+        .candidate-img {
+            width: 80px;
+            height: 80px;
             border-radius: 50%;
-            width: 100px;
-            height: 100px;
             object-fit: cover;
-            border: 5px solid white;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
+            border: 3px solid #fff;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
         
-        .candidate-card:hover img {
-            transform: scale(1.1);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-        }
-
-        .candidate-card .btn-primary {
-            background: var(--primary-color);
-            border: none;
-            border-radius: 10px;
-            padding: 10px 25px;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .candidate-card .btn-primary::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transition: all 0.5s ease;
-        }
-        
-        .candidate-card .btn-primary:hover {
-            background: #480ca8;
-            transform: translateY(-2px);
-        }
-        
-        .candidate-card .btn-primary:hover::after {
-            left: 100%;
-        }
-
         .skill-badge {
             background-color: #e0e0e0;
             color: #333;
-            padding: 5px 12px;
+            padding: 5px 10px;
             border-radius: 20px;
             font-size: 0.8rem;
-            margin-right: 8px;
-            margin-bottom: 8px;
+            margin-right: 5px;
+            margin-bottom: 5px;
             display: inline-block;
-            transition: all 0.2s ease;
+            transition: all 0.2s;
         }
         
         .skill-badge:hover {
-            background-color: var(--secondary-color);
+            background-color: #d0d0d0;
+        }
+        
+        /* Tagify styles */
+        .tagify {
+            --tags-border-color: #ced4da;
+            --tag-bg: #e0e0e0;
+            --tag-text-color: #333;
+            --tag-remove-btn-color: #dc3545;
+        }
+        
+        .tagify__dropdown__item {
+            padding: 8px 12px;
+        }
+        
+        .tagify__dropdown__item--active {
+            background-color: #0d6efd;
             color: white;
-            transform: translateY(-2px);
-        }
-
-        .section-title {
-            position: relative;
-            margin-bottom: 30px;
-            color: var(--primary-color);
         }
         
-        .section-title::after {
-            content: '';
-            position: absolute;
-            left: 0;
-            bottom: -10px;
-            width: 70px;
-            height: 4px;
-            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
-            border-radius: 2px;
-        }
-        
-        /* Animation classes */
-        .animate-fade-in {
-            animation: fadeIn 0.6s ease forwards;
-        }
-        
-        .animate-slide-up {
-            animation: slideUp 0.5s ease forwards;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        
-        @keyframes slideUp {
-            from { 
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to { 
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        /* Profile details styling */
-        .profile-header {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            color: white;
-            padding: 30px 0;
-            border-radius: 15px;
-            margin-bottom: 30px;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .profile-header::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
-            transform: rotate(30deg);
-        }
-        
-        .profile-img {
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            border: 5px solid white;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-        }
-        
-        .profile-detail-card {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
-            margin-bottom: 20px;
+        /* Wilaya input animation */
+        #location {
             transition: all 0.3s ease;
         }
         
-        .profile-detail-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-        }
-        
-        .detail-title {
-            color: var(--primary-color);
-            font-weight: 600;
-            margin-bottom: 15px;
-            position: relative;
-            padding-bottom: 10px;
-        }
-        
-        .detail-title::after {
-            content: '';
-            position: absolute;
-            left: 0;
-            bottom: 0;
-            width: 40px;
-            height: 3px;
-            background: var(--accent-color);
-        }
-        
-        .detail-item {
-            margin-bottom: 10px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #f0f0f0;
-        }
-        
-        .detail-item:last-child {
-            border-bottom: none;
-            margin-bottom: 0;
-            padding-bottom: 0;
-        }
-        
-        .detail-label {
-            font-weight: 600;
-            color: var(--dark-text);
-        }
-        
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-            .candidate-card {
-                margin-bottom: 20px;
-            }
-            
-            .filter-section {
-                margin-bottom: 30px;
-            }
+        #location:focus {
+            border-color: #86b7fe;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
         }
     </style>
 </head>
-
 <body>
-    <!-- Navbar -->
     <?php include "templates/header.php" ?>
 
-    <!-- Main Content -->
-    <div class="container my-5">
+    <div class="container mt-5">
+        <h2 class="text-center mb-4">Find Top Candidates</h2>
+        
+        <!-- Debug Info -->
+        <div class="alert alert-info mb-4">
+            <strong>Debug Info:</strong> 
+            Found <?php echo count($candidates); ?> candidates matching your criteria.
+            <?php if (count($candidates) > 0): ?>
+                First candidate: <?php echo $candidates[0]['first_name'] . ' ' . $candidates[0]['last_name']; ?>
+            <?php endif; ?>
+        </div>
+
         <div class="row">
-            <!-- Filter Section -->
-            <div class="col-lg-4 mb-4 animate__animated animate__fadeInLeft">
-                <div class="filter-section">
-                    <h5>Filter Candidates</h5>
-                    <form id="filterForm" method="GET" action="">
-                        <!-- Keyword Search -->
+            <!-- Filters Column -->
+            <div class="col-md-3">
+                <form id="filterForm" method="GET" action="">
+                    <div class="card p-3 mb-4">
+                        <h5 class="mb-3">Filters</h5>
+                        
                         <div class="mb-3">
                             <label for="keyword" class="form-label">Keywords</label>
                             <input type="text" class="form-control" id="keyword" name="keyword" 
-                                   value="<?= htmlspecialchars($keyword) ?>" placeholder="e.g., Python, React, Marketing">
+                                   placeholder="Name, title, etc." value="<?= htmlspecialchars($keyword) ?>">
                         </div>
-
-                        <!-- Location - Algerian Wilayas -->
+                        
                         <div class="mb-3">
                             <label for="location" class="form-label">Location (Wilaya)</label>
-                            <input class="form-control" list="wilayas" id="location" name="location" 
-                                   value="<?= htmlspecialchars($location) ?>" placeholder="Select or type a wilaya">
+                            <input type="text" class="form-control" id="location" name="location" 
+                                   placeholder="Start typing wilaya..." value="<?= htmlspecialchars($location) ?>" list="wilayas">
                             <datalist id="wilayas">
                                 <option value="Adrar">
-                                <option value="Chlef">
-                                <option value="Laghouat">
-                                <option value="Oum El Bouaghi">
-                                <option value="Batna">
-                                <option value="Béjaïa">
-                                <option value="Biskra">
-                                <option value="Béchar">
-                                <option value="Blida">
-                                <option value="Bouira">
-                                <option value="Tamanrasset">
-                                <option value="Tébessa">
-                                <option value="Tlemcen">
-                                <option value="Tiaret">
-                                <option value="Tizi Ouzou">
                                 <option value="Algiers">
-                                <option value="Djelfa">
-                                <option value="Jijel">
-                                <option value="Sétif">
-                                <option value="Saïda">
-                                <option value="Skikda">
-                                <option value="Sidi Bel Abbès">
-                                <option value="Annaba">
-                                <option value="Guelma">
-                                <option value="Constantine">
-                                <option value="Médéa">
-                                <option value="Mostaganem">
-                                <option value="M'Sila">
-                                <option value="Mascara">
-                                <option value="Ouargla">
-                                <option value="Oran">
-                                <option value="El Bayadh">
-                                <option value="Illizi">
-                                <option value="Bordj Bou Arréridj">
-                                <option value="Boumerdès">
-                                <option value="El Tarf">
-                                <option value="Tindouf">
-                                <option value="Tissemsilt">
-                                <option value="El Oued">
-                                <option value="Khenchela">
-                                <option value="Souk Ahras">
-                                <option value="Tipaza">
-                                <option value="Mila">
-                                <option value="Aïn Defla">
-                                <option value="Naâma">
-                                <option value="Aïn Témouchent">
-                                <option value="Ghardaïa">
-                                <option value="Relizane">
-                                <option value="Timimoun">
-                                <option value="Bordj Badji Mokhtar">
-                                <option value="Ouled Djellal">
-                                <option value="Béni Abbès">
-                                <option value="In Salah">
-                                <option value="In Guezzam">
-                                <option value="Touggourt">
-                                <option value="Djanet">
-                                <option value="El M'Ghair">
-                                <option value="El Menia">
+                                <option value="Batna">
+                                <option value="Tiaret">
+                                <!-- Add more wilayas as needed -->
                             </datalist>
                         </div>
-
-                        <!-- Experience Level -->
+                        
                         <div class="mb-3">
                             <label for="experience" class="form-label">Experience Level</label>
                             <select class="form-select" id="experience" name="experience">
-                                <option value="">Any</option>
+                                <option value="">All Levels</option>
                                 <option value="entry" <?= $experience == 'entry' ? 'selected' : '' ?>>Entry Level</option>
                                 <option value="mid" <?= $experience == 'mid' ? 'selected' : '' ?>>Mid Level</option>
                                 <option value="senior" <?= $experience == 'senior' ? 'selected' : '' ?>>Senior Level</option>
                             </select>
                         </div>
-
-                        <!-- Skills - Autocomplete -->
+                        
                         <div class="mb-3">
                             <label for="skills" class="form-label">Skills</label>
                             <input type="text" class="form-control" id="skills" name="skills" 
-                                   value="<?= htmlspecialchars($skills) ?>" placeholder="Start typing a skill...">
-                            <div id="skillsSuggestions" class="mt-2"></div>
+                                   placeholder="Type and press enter" value="<?= htmlspecialchars($skills) ?>">
                         </div>
-
-                        <!-- Education -->
+                        
                         <div class="mb-3">
                             <label for="education" class="form-label">Education</label>
                             <select class="form-select" id="education" name="education">
-                                <option value="">Any</option>
+                                <option value="">All Education</option>
                                 <option value="bachelor" <?= $education == 'bachelor' ? 'selected' : '' ?>>Bachelor's Degree</option>
                                 <option value="master" <?= $education == 'master' ? 'selected' : '' ?>>Master's Degree</option>
                                 <option value="phd" <?= $education == 'phd' ? 'selected' : '' ?>>PhD</option>
                             </select>
                         </div>
-
-                        <!-- Submit Button -->
-                        <button type="submit" class="btn btn-primary w-100 py-2">
-                            <span class="d-flex align-items-center justify-content-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-funnel-fill me-2" viewBox="0 0 16 16">
-                                    <path d="M1.5 1.5A.5.5 0 0 1 2 1h12a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.128.334L10 8.692V13.5a.5.5 0 0 1-.342.474l-3 1A.5.5 0 0 1 6 14.5V8.692L1.628 3.834A.5.5 0 0 1 1.5 3.5v-2z"/>
-                                </svg>
-                                Apply Filters
-                            </span>
-                        </button>
+                        
+                        <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
                         <?php if (!empty($_GET)): ?>
-                            <a href="?" class="btn btn-outline-secondary w-100 mt-2 py-2">
-                                <span class="d-flex align-items-center justify-content-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-x-circle-fill me-2" viewBox="0 0 16 16">
-                                        <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293 5.354 4.646z"/>
-                                    </svg>
-                                    Clear Filters
-                                </span>
-                            </a>
+                            <a href="?" class="btn btn-outline-secondary w-100 mt-2">Clear Filters</a>
                         <?php endif; ?>
-                    </form>
-                </div>
+                    </div>
+                </form>
             </div>
-
-            <!-- Candidate List -->
-            <div class="col-lg-8 animate__animated animate__fadeInRight">
-                <h2 class="mb-4 section-title">Candidates</h2>
+            
+            <!-- Candidates List -->
+            <div class="col-md-9">
                 <?php if (empty($candidates)): ?>
-                    <div class="alert alert-info animate__animated animate__fadeIn">No candidates found matching your criteria.</div>
+                    <div class="alert alert-warning">No candidates found matching your criteria. Try adjusting your filters.</div>
                 <?php else: ?>
-                    <div class="row" id="candidateList">
-                        <?php foreach ($candidates as $index => $candidate): ?>
-                            <div class="col-md-6 mb-4 animate__animated animate__fadeInUp" style="animation-delay: <?= $index * 0.1 ?>s">
-                                <div class="card candidate-card">
-                                    <div class="card-body text-center">
-                                        <img src="<?= !empty($candidate['profile_picture']) ? htmlspecialchars($candidate['profile_picture']) : 'assets/icons/default-profile.png' ?>" 
-                                             alt="Candidate Image" class="mb-3">
-                                        <h5 class="card-title"><?= htmlspecialchars($candidate['first_name'] . ' ' . $candidate['last_name']) ?></h5>
-                                        <p class="card-text">
-                                            <?= !empty($candidate['specialities']) ? htmlspecialchars(explode(',', $candidate['specialities'])[0]) : 'No specialty specified' ?>
-                                        </p>
-                                        <p class="card-text"><small class="text-muted">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-geo-alt-fill me-1" viewBox="0 0 16 16">
-                                                <path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10zm0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"/>
-                                            </svg>
-                                            <?= htmlspecialchars($candidate['address']) ?>
-                                        </small></p>
-                                        
-                                        <?php if (!empty($candidate['skills_list'])): ?>
-                                            <div class="mb-3">
-                                                <?php 
-                                                $skills = explode(',', $candidate['skills_list']);
-                                                foreach (array_slice($skills, 0, 3) as $skill): ?>
-                                                    <span class="skill-badge"><?= htmlspecialchars(trim($skill)) ?></span>
-                                                <?php endforeach; ?>
-                                                <?php if (count($skills) > 3): ?>
-                                                    <span class="skill-badge">+<?= count($skills) - 3 ?> more</span>
+                    <div class="row">
+                        <?php foreach ($candidates as $candidate): 
+                            // Clean up skills data
+                            $skills_list = !empty($candidate['skills_list']) ? $candidate['skills_list'] : '';
+                            $skills_array = explode(',', $skills_list);
+                            $skills_array = array_map('trim', $skills_array);
+                            $skills_array = array_filter($skills_array);
+                        ?>
+                            <div class="col-md-6 mb-4">
+                                <div class="card job-card h-100">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-start mb-3">
+                                            <img src="<?= !empty($candidate['profile_picture']) ? htmlspecialchars($candidate['profile_picture']) : 'assets/icons/default-profile.png' ?>" 
+                                                 class="candidate-img me-3" alt="Candidate">
+                                            <div>
+                                                <h5 class="card-title mb-1"><?= htmlspecialchars($candidate['first_name'] . ' ' . $candidate['last_name']) ?></h5>
+                                                <?php if (!empty($candidate['job_titles'])): ?>
+                                                    <p class="text-muted mb-2"><?= htmlspecialchars(explode(',', $candidate['job_titles'])[0]) ?></p>
                                                 <?php endif; ?>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <span class="text-muted me-3"><i class="fas fa-map-marker-alt me-1"></i> <?= htmlspecialchars($candidate['address']) ?></span>
+                                            <?php if (!empty($candidate['education_levels'])): ?>
+                                                <span class="text-muted"><i class="fas fa-graduation-cap me-1"></i> <?= htmlspecialchars(explode(',', $candidate['education_levels'])[0]) ?></span>
+                                            <?php endif; ?>
+                                        </div>
+                                        
+                                        <?php if (!empty($skills_array)): ?>
+                                            <div class="mb-3">
+                                                <?php foreach (array_slice($skills_array, 0, 5) as $skill): 
+                                                    // Clean JSON formatting if present
+                                                    $skill = str_replace(['{"value":"', '"}', '[', ']'], '', $skill);
+                                                ?>
+                                                    <span class="skill-badge"><?= htmlspecialchars($skill) ?></span>
+                                                <?php endforeach; ?>
                                             </div>
                                         <?php endif; ?>
                                         
-                                        <a href="candidate_profile.php?id=<?= $candidate['id'] ?>" class="btn btn-primary">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-lines-fill me-1" viewBox="0 0 16 16">
-                                                <path d="M6 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm-5 6s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H1zM11 3.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5zm.5 2.5a.5.5 0 0 0 0 1h4a.5.5 0 0 0 0-1h-4zm2 3a.5.5 0 0 0 0 1h2a.5.5 0 0 0 0-1h-2zm0 3a.5.5 0 0 0 0 1h2a.5.5 0 0 0 0-1h-2z"/>
-                                            </svg>
-                                            View Profile
-                                        </a>
+                                        <div class="d-flex justify-content-between">
+                                            <a href="candidate_profile.php?id=<?= $candidate['id'] ?>" class="btn btn-outline-primary btn-sm">View Profile</a>
+                                            <?php if (!empty($candidate['cv'])): ?>
+                                                <a href="<?= htmlspecialchars($candidate['cv']) ?>" class="btn btn-primary btn-sm" download>Download CV</a>
+                                            <?php endif; ?>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -581,85 +317,31 @@ $all_skills = $skills_result->fetch_all(MYSQLI_ASSOC);
         </div>
     </div>
 
-    <!-- Footer -->
     <?php include "templates/footer.php" ?>
 
-    <script src="assets/JS/bootstrap.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="assets/JS/bootstrap.bundle.min.js"></script>
+    <script src="assets/icons/all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@yaireo/tagify"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.polyfills.min.js"></script>
+    
     <script>
-        $(document).ready(function() {
-            // Initialize tooltips
-            $('[data-bs-toggle="tooltip"]').tooltip();
-            
-            // Skills autocomplete
-            const allSkills = <?= json_encode(array_column($all_skills, 'content')) ?>;
-            
-            $('#skills').on('input', function() {
-                const input = $(this).val().toLowerCase();
-                if (input.length < 2) {
-                    $('#skillsSuggestions').empty();
-                    return;
-                }
-                
-                const matches = allSkills.filter(skill => 
-                    skill.toLowerCase().includes(input)
-                ).slice(0, 5);
-                
-                let suggestionsHtml = '';
-                if (matches.length > 0) {
-                    suggestionsHtml = '<div class="list-group">';
-                    matches.forEach(skill => {
-                        suggestionsHtml += `
-                            <a href="#" class="list-group-item list-group-item-action skill-suggestion" data-skill="${skill}">
-                                ${skill}
-                            </a>`;
-                    });
-                    suggestionsHtml += '</div>';
-                }
-                
-                $('#skillsSuggestions').html(suggestionsHtml);
-            });
-            
-            // Handle skill suggestion click
-            $(document).on('click', '.skill-suggestion', function(e) {
-                e.preventDefault();
-                const skill = $(this).data('skill');
-                const currentSkills = $('#skills').val();
-                
-                if (currentSkills) {
-                    // Check if skill already exists
-                    const skillsArray = currentSkills.split(',').map(s => s.trim());
-                    if (!skillsArray.includes(skill)) {
-                        $('#skills').val(currentSkills + ', ' + skill);
-                    }
-                } else {
-                    $('#skills').val(skill);
-                }
-                
-                $('#skillsSuggestions').empty();
-                $('#skills').focus();
-            });
-            
-            // Animate elements when they come into view
-            const animateOnScroll = function() {
-                $('.animate-on-scroll').each(function() {
-                    const elementTop = $(this).offset().top;
-                    const elementBottom = elementTop + $(this).outerHeight();
-                    const viewportTop = $(window).scrollTop();
-                    const viewportBottom = viewportTop + $(window).height();
-                    
-                    if (elementBottom > viewportTop && elementTop < viewportBottom) {
-                        const animation = $(this).data('animation');
-                        $(this).addClass(`animate__animated animate__${animation}`);
-                    }
-                });
-            };
-            
-            // Run once on page load
-            animateOnScroll();
-            
-            // Run on scroll
-            $(window).on('scroll', animateOnScroll);
+        // Initialize Tagify for skills input
+        const skillsInput = document.getElementById('skills');
+        const tagify = new Tagify(skillsInput, {
+            whitelist: <?= json_encode(array_column($all_skills, 'content')) ?>,
+            dropdown: {
+                enabled: 1,
+                maxItems: 10,
+                position: "input",
+                closeOnSelect: false
+            },
+            originalInputValueFormat: valuesArr => valuesArr.map(item => item.value).join(',')
+        });
+
+        // Convert tags to comma-separated string before form submission
+        document.getElementById('filterForm').addEventListener('submit', function() {
+            const tags = tagify.value.map(tag => tag.value);
+            skillsInput.value = tags.join(',');
         });
     </script>
 </body>
