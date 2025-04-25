@@ -3,6 +3,9 @@ include "connexion/config.php";
 define('SECURE_ACCESS', true);
 session_start();
 
+// Get company ID from URL if coming from company search
+$company_id = isset($_GET['company_id']) ? intval($_GET['company_id']) : 0;
+
 // Time elapsed function
 function time_elapsed_string($datetime, $full = false) {
     $now = new DateTime;
@@ -39,6 +42,19 @@ $location = isset($_GET['location']) ? trim($_GET['location']) : '';
 $job_type = isset($_GET['job_type']) ? trim($_GET['job_type']) : '';
 $salary_min = isset($_GET['salary_min']) ? intval($_GET['salary_min']) : 0;
 
+// Get company name if coming from company search
+$company_name = '';
+if ($company_id > 0) {
+    $stmt = $conn->prepare("SELECT name FROM company WHERE id = ?");
+    $stmt->bind_param("i", $company_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($result->num_rows > 0) {
+        $company = $result->fetch_assoc();
+        $company_name = $company['name'];
+    }
+}
+
 // Build the SQL query with filters
 $sql = "SELECT j.*, c.name AS company, c.location AS company_location 
         FROM job j
@@ -56,6 +72,13 @@ if (!empty($keywords)) {
     $params[] = $searchTerm;
     $params[] = $searchTerm;
     $types .= 'ss';
+}
+
+// Add company filter if coming from company search
+if ($company_id > 0) {
+    $sql .= " AND c.id = ?";
+    $params[] = $company_id;
+    $types .= 'i';
 }
 
 // Add location filter
@@ -162,6 +185,22 @@ $jobs = $stmt->get_result();
         .form-range::-ms-thumb {
             background: #0d6efd;
         }
+        
+        .company-filter-badge {
+            background-color: #e9f7fe;
+            color: #0d6efd;
+            padding: 8px 12px;
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .company-filter-badge .close {
+            margin-left: 8px;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
     </style>
 </head>
 
@@ -176,12 +215,25 @@ $jobs = $stmt->get_result();
             <!-- Filters -->
             <div class="col-md-3">
                 <form id="filterForm" method="GET" action="">
+                    <!-- Pass company_id if it exists -->
+                    <?php if ($company_id > 0): ?>
+                        <input type="hidden" name="company_id" value="<?= $company_id ?>">
+                    <?php endif; ?>
+                    
                     <div class="card p-3 filter-card">
                         <h5 class="mb-3">Filters</h5>
+                        
+                        <?php if (!empty($company_name)): ?>
+                            <div class="company-filter-badge">
+                                <?= htmlspecialchars($company_name) ?>
+                                <a href="job_search.php" class="close">&times;</a>
+                            </div>
+                        <?php endif; ?>
+                        
                         <div class="mb-3">
                             <label for="keywords" class="form-label">Job Name</label>
                             <input type="text" class="form-control" id="keywords" name="keywords" 
-                                   placeholder="Job title, keywords, company" value="<?= htmlspecialchars($keywords) ?>">
+                                   placeholder="Job title, keywords" value="<?= htmlspecialchars($keywords) ?>">
                         </div>
                         <div class="mb-3">
                             <label for="location" class="form-label">Location</label>
@@ -211,7 +263,7 @@ $jobs = $stmt->get_result();
                             </div>
                         </div>
                         <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
-                        <?php if (!empty($keywords) || !empty($location) || $job_type !== 'all' || $salary_min > 0): ?>
+                        <?php if (!empty($keywords) || !empty($location) || $job_type !== 'all' || $salary_min > 0 || $company_id > 0): ?>
                             <a href="job_search.php" class="btn btn-outline-secondary mt-2 w-100">Reset Filters</a>
                         <?php endif; ?>
                     </div>
@@ -221,6 +273,13 @@ $jobs = $stmt->get_result();
             <!-- Job Listings -->
             <div id="jobs_list" class="col-md-9">
                 <?php if ($jobs->num_rows > 0): ?>
+                    <?php if ($company_id > 0): ?>
+                        <div class="alert alert-info mb-4">
+                            Showing jobs from <strong><?= htmlspecialchars($company_name) ?></strong>
+                            <a href="job_search.php" class="float-end">Show all companies</a>
+                        </div>
+                    <?php endif; ?>
+                    
                     <div class="row">
                         <?php while ($row = $jobs->fetch_assoc()): ?>
                             <div class="col-md-6 mb-4">

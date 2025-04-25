@@ -84,6 +84,7 @@ if (isset($_SESSION['error'])) {
                 <thead>
                     <tr>
                         <th>ID</th>
+                        <th>Photo</th>
                         <th>Name</th>
                         <th>Email</th>
                         <th>Phone</th>
@@ -101,6 +102,12 @@ if (isset($_SESSION['error'])) {
                     ?>
                     <tr>
                         <td><?= $candidate['id'] ?></td>
+                        <td>
+                            <img src="<?= !empty($candidate['profile_picture']) ? 
+                                htmlspecialchars($candidate['profile_picture']) : 
+                                'assets/images/default-profile.png' ?>" 
+                                alt="Profile" class="rounded-circle" width="40" height="40">
+                        </td>
                         <td><?= htmlspecialchars($candidate['first_name'] . ' ' . $candidate['last_name']) ?></td>
                         <td><?= htmlspecialchars($candidate['email']) ?></td>
                         <td><?= htmlspecialchars($candidate['phone'] ?? 'N/A') ?></td>
@@ -119,51 +126,53 @@ if (isset($_SESSION['error'])) {
                             </span>
                         </td>
                         <td class="text-nowrap">
-                            <!-- View CV Button -->
-                            <?php if ($candidate['cv']): ?>
-                                <a href="<?= $candidate['cv'] ?>" target="_blank" class="btn btn-sm btn-primary action-btn" 
-                                   data-bs-toggle="tooltip" title="View CV">
-                                    <i class="fas fa-file-pdf"></i>
-                                </a>
-                                
-                                <!-- Approve/Reject Buttons -->
-                                <?php if ($candidate['cv_status'] != 'approved'): ?>
-                                    <form method="POST" class="d-inline">
-                                        <input type="hidden" name="candidate_id" value="<?= $candidate['id'] ?>">
-                                        <button type="submit" name="approve_cv" class="btn btn-sm btn-success action-btn" 
-                                                data-bs-toggle="tooltip" title="Approve CV">
-                                            <i class="fas fa-check"></i>
-                                        </button>
-                                    </form>
+                            <div class="d-flex">
+                                <!-- View CV Button -->
+                                <?php if ($candidate['cv']): ?>
+                                    <a href="<?= $candidate['cv'] ?>" target="_blank" class="btn btn-sm btn-primary me-2" 
+                                       data-bs-toggle="tooltip" title="View CV">
+                                        <i class="fas fa-file-pdf"></i>
+                                    </a>
+                                    
+                                    <!-- Approve/Reject Buttons -->
+                                    <?php if ($candidate['cv_status'] != 'approved'): ?>
+                                        <form method="POST" class="me-2">
+                                            <input type="hidden" name="candidate_id" value="<?= $candidate['id'] ?>">
+                                            <button type="submit" name="approve_cv" class="btn btn-sm btn-success" 
+                                                    data-bs-toggle="tooltip" title="Approve CV">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                        </form>
+                                    <?php endif; ?>
+                                    
+                                    <?php if ($candidate['cv_status'] != 'rejected'): ?>
+                                        <form method="POST" class="me-2">
+                                            <input type="hidden" name="candidate_id" value="<?= $candidate['id'] ?>">
+                                            <button type="submit" name="reject_cv" class="btn btn-sm btn-danger" 
+                                                    data-bs-toggle="tooltip" title="Reject CV">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </form>
+                                    <?php endif; ?>
                                 <?php endif; ?>
                                 
-                                <?php if ($candidate['cv_status'] != 'rejected'): ?>
-                                    <form method="POST" class="d-inline">
-                                        <input type="hidden" name="candidate_id" value="<?= $candidate['id'] ?>">
-                                        <button type="submit" name="reject_cv" class="btn btn-sm btn-danger action-btn" 
-                                                data-bs-toggle="tooltip" title="Reject CV">
-                                            <i class="fas fa-times"></i>
-                                        </button>
-                                    </form>
-                                <?php endif; ?>
-                            <?php endif; ?>
-                            
-                            <!-- Toggle Status Button -->
-                            <form method="POST" class="d-inline">
-                                <input type="hidden" name="candidate_id" value="<?= $candidate['id'] ?>">
-                                <button type="submit" name="toggle_status" class="btn btn-sm btn-<?= $candidate['status'] == 'active' ? 'warning' : 'success' ?> action-btn" 
-                                        data-bs-toggle="tooltip" title="<?= $candidate['status'] == 'active' ? 'Deactivate' : 'Activate' ?>">
-                                    <i class="fas fa-<?= $candidate['status'] == 'active' ? 'ban' : 'check' ?>"></i>
+                                <!-- Toggle Status Button -->
+                                <form method="POST" class="me-2">
+                                    <input type="hidden" name="candidate_id" value="<?= $candidate['id'] ?>">
+                                    <button type="submit" name="toggle_status" class="btn btn-sm btn-<?= $candidate['status'] == 'active' ? 'warning' : 'success' ?>" 
+                                            data-bs-toggle="tooltip" title="<?= $candidate['status'] == 'active' ? 'Deactivate' : 'Activate' ?>">
+                                        <i class="fas fa-<?= $candidate['status'] == 'active' ? 'ban' : 'check' ?>"></i>
+                                    </button>
+                                </form>
+                                
+                                <!-- View Details Button -->
+                                <button class="btn btn-sm btn-info view-details" 
+                                        data-id="<?= $candidate['id'] ?>"
+                                        data-bs-toggle="modal" data-bs-target="#candidateDetailsModal"
+                                        data-bs-toggle="tooltip" title="View Details">
+                                    <i class="fas fa-eye"></i>
                                 </button>
-                            </form>
-                            
-                            <!-- View Details Button -->
-                            <button class="btn btn-sm btn-info action-btn view-details" 
-                                    data-id="<?= $candidate['id'] ?>"
-                                    data-bs-toggle="modal" data-bs-target="#candidateDetailsModal"
-                                    data-bs-toggle="tooltip" title="View Details">
-                                <i class="fas fa-eye"></i>
-                            </button>
+                            </div>
                         </td>
                     </tr>
                     <?php endwhile; ?>
