@@ -3,15 +3,6 @@ include "connexion/config.php";
 define('SECURE_ACCESS', true);
 session_start();
 
-if (!isset($_SESSION['user_email'])) {
-    header("Location: login.php");
-    exit();
-}
-
-// Debug mode - uncomment these to see errors
-// error_reporting(E_ALL);
-// ini_set('display_errors', 1);
-
 // Get filter parameters
 $keyword = isset($_GET['keyword']) ? trim($_GET['keyword']) : '';
 $location = isset($_GET['location']) ? trim($_GET['location']) : '';

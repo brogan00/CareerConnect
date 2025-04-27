@@ -83,58 +83,15 @@ if (isset($_SESSION['user_email'])) {
 
         <?php if (isset($_SESSION['user_email'])): ?>
             <div class="d-flex ms-auto align-items-center mt-2 mt-lg-0">
-                <!-- Notification Button -->
-                <div class="dropdown me-3 position-relative">
-                    <a href="#" class="btn btn-light position-relative" id="notificationDropdown" role="button"
-                        data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="bi bi-bell-fill"></i>
-                        <?php
-                        require_once 'functions/notifications_functions.php';
-                        $notification_count = 0;
-                        if ($_SESSION['user_type'] == "candidat") {
-                            $notification_count = getUnreadNotificationCount($conn, $_SESSION['user_email']);
-                        } elseif ($_SESSION['user_type'] == "admin") {
-                            $notification_count = getUnreadNotificationCount($conn, null, $_SESSION['user_email']);
-                        }
-
-                        if ($notification_count > 0): ?>
-                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger notification-count">
-                                <?php echo $notification_count; ?>
-                            </span>
-                        <?php endif; ?>
+                <?php if ($_SESSION['user_type'] == 'candidat'): ?>
+                    <a href="candidate_dashboard.php" class="btn btn-outline-primary me-3">
+                        <i class="bi bi-speedometer2 me-1"></i> Dashboard
                     </a>
-                    <ul class="dropdown-menu dropdown-menu-end p-2" aria-labelledby="notificationDropdown"
-                        style="width: 300px; max-height: 400px; overflow-y: auto;">
-                        <?php
-                        $notifications = [];
-                        if ($_SESSION['user_type'] == "candidat") {
-                            $notifications = getNotifications($conn, $_SESSION['user_email']);
-                        } elseif ($_SESSION['user_type'] == "admin") {
-                            $notifications = getNotifications($conn, null, $_SESSION['user_email']);
-                        }
-
-                        if (!empty($notifications)): ?>
-                            <?php foreach ($notifications as $notification): ?>
-                                <li>
-                                    <a class="dropdown-item <?= $notification['is_read'] ? '' : 'fw-bold'; ?>"
-                                        href="<?= getNotificationLink($notification) ?>">
-                                        <div class="d-flex justify-content-between">
-                                            <span><?= htmlspecialchars($notification['message']); ?></span>
-                                            <small class="text-muted"><?= date("M j, g:i a", strtotime($notification['created_at'])); ?></small>
-                                        </div>
-                                    </a>
-                                </li>
-                                <li>
-                                    <hr class="dropdown-divider">
-                                </li>
-                            <?php endforeach; ?>
-                            <li><a class="dropdown-item text-center text-primary" href="notifications.php">View All Notifications</a></li>
-                        <?php else: ?>
-                            <li><a class="dropdown-item text-center">No new notifications</a></li>
-                        <?php endif; ?>
-                    </ul>
-                </div>
-
+                <?php elseif ($_SESSION['user_type'] == 'recruiter'): ?>
+                    <a href="recruiter_dashboard.php" class="btn btn-outline-primary me-3">
+                        <i class="bi bi-speedometer2 me-1"></i> Dashboard
+                    </a>
+                <?php endif; ?>
 
                 <a href="profile.php" class="d-flex align-items-center text-decoration-none me-3">
                     <img src="<?php echo htmlspecialchars($profile_picture); ?>" width="45" height="45" class="rounded-circle border border-secondary shadow-sm me-2" alt="Profile" />

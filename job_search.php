@@ -6,6 +6,54 @@ session_start();
 // Get company ID from URL if coming from company search
 $company_id = isset($_GET['company_id']) ? intval($_GET['company_id']) : 0;
 
+// Handle job application
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['apply_job'])) {
+    if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'candidat') {
+        $_SESSION['error_message'] = "You must be logged in as a candidate to apply for jobs";
+        header("Location: connexion/login.php");
+        exit();
+    }
+
+    $job_id = intval($_POST['job_id']);
+    $user_id = $_SESSION['user_id'];
+    
+    // Check if already applied
+    $check_stmt = $conn->prepare("SELECT id FROM application WHERE user_id = ? AND job_id = ?");
+    $check_stmt->bind_param("ii", $user_id, $job_id);
+    $check_stmt->execute();
+    $result = $check_stmt->get_result();
+    
+    if ($result->num_rows == 0) {
+        // Insert new application
+        $insert_stmt = $conn->prepare("INSERT INTO application (status, user_id, job_id, applied_at) VALUES ('pending', ?, ?, NOW())");
+        if ($insert_stmt->bind_param("ii", $user_id, $job_id) && $insert_stmt->execute()) {
+            $application_id = $conn->insert_id;
+            
+            // Get job details for notification
+            $job_stmt = $conn->prepare("SELECT j.title, c.name AS company_name FROM job j JOIN recruiter r ON j.recruiter_id = r.id JOIN company c ON r.company_id = c.id WHERE j.id = ?");
+            $job_stmt->bind_param("i", $job_id);
+            $job_stmt->execute();
+            $job_data = $job_stmt->get_result()->fetch_assoc();
+            
+            // Create notification for candidate
+            $message = "You applied for '{$job_data['title']}' at {$job_data['company_name']} - status pending";
+            $notif_stmt = $conn->prepare("INSERT INTO notifications (user_id, message, type, related_id, created_at) VALUES (?, ?, 'application', ?, NOW())");
+            $notif_stmt->bind_param("isi", $user_id, $message, $application_id);
+            $notif_stmt->execute();
+            
+            $_SESSION['success_message'] = "Application submitted successfully!";
+        } else {    
+            $_SESSION['error_message'] = "Error submitting application";
+        }
+    } else {
+        $_SESSION['error_message'] = "You've already applied to this job";
+    }
+    
+    header("Location: job_search.php");
+    exit();
+}
+
+
 // Time elapsed function
 function time_elapsed_string($datetime, $full = false) {
     $now = new DateTime;
@@ -53,6 +101,19 @@ if ($company_id > 0) {
         $company = $result->fetch_assoc();
         $company_name = $company['name'];
     }
+}
+
+// Get list of jobs user has already applied to
+$applied_jobs = [];
+if (isset($_SESSION['user_email']) && $_SESSION['user_type'] === 'candidat') {
+    $applied_stmt = $conn->prepare("SELECT job_id FROM application WHERE user_id = ?");
+    $applied_stmt->bind_param("i", $_SESSION['user_email']);
+    $applied_stmt->execute();
+    $applied_result = $applied_stmt->get_result();
+    while ($row = $applied_result->fetch_assoc()) {
+        $applied_jobs[] = $row['job_id'];
+    }
+    $applied_stmt->close();
 }
 
 // Build the SQL query with filters
@@ -128,7 +189,6 @@ $jobs = $stmt->get_result();
     <link rel="stylesheet" href="assets/CSS/bootstrap.min.css" />
     <link rel="stylesheet" href="assets/icons/all.min.css" />
     <link rel="stylesheet" href="assets/CSS/style.css" />
-    <link rel="icon" type="image/png" href="./assets/images/hamidou.png" width="8" />
     <style>
         .job-card {
             border: none;
@@ -201,6 +261,17 @@ $jobs = $stmt->get_result();
             font-size: 1.2rem;
             cursor: pointer;
         }
+        
+        .already-applied {
+            background-color: #e8e8e8;
+            color: #666;
+            cursor: not-allowed;
+        }
+        
+        .application-modal .modal-header {
+            background-color: #0d6efd;
+            color: white;
+        }
     </style>
 </head>
 
@@ -211,6 +282,17 @@ $jobs = $stmt->get_result();
     <!-- Job Search Content -->
     <div class="container mt-5">
         <h2 class="text-center mb-4">Find Your Dream Job</h2>
+        
+        <?php if (isset($_SESSION['success_message'])): ?>
+            <div class="alert alert-success"><?= $_SESSION['success_message'] ?></div>
+            <?php unset($_SESSION['success_message']); ?>
+        <?php endif; ?>
+        
+        <?php if (isset($_SESSION['error_message'])): ?>
+            <div class="alert alert-danger"><?= $_SESSION['error_message'] ?></div>
+            <?php unset($_SESSION['error_message']); ?>
+        <?php endif; ?>
+
         <div class="row">
             <!-- Filters -->
             <div class="col-md-3">
@@ -281,7 +363,9 @@ $jobs = $stmt->get_result();
                     <?php endif; ?>
                     
                     <div class="row">
-                        <?php while ($row = $jobs->fetch_assoc()): ?>
+                        <?php while ($row = $jobs->fetch_assoc()): 
+                            $has_applied = in_array($row['id'], $applied_jobs);
+                        ?>
                             <div class="col-md-6 mb-4">
                                 <div class="card job-card h-100">
                                     <div class="card-body">
@@ -308,7 +392,17 @@ $jobs = $stmt->get_result();
                                         <div class="d-flex justify-content-between align-items-center">
                                             <a href="job_details.php?id=<?= $row['id'] ?>" class="btn btn-outline-primary btn-sm">View Details</a>
                                             <?php if (isset($_SESSION['user_email']) && $_SESSION['user_type'] === 'candidat'): ?>
-                                                <a href="apply_job.php?id=<?= $row['id'] ?>" class="btn btn-primary btn-sm">Apply Now</a>
+                                                <?php if ($has_applied): ?>
+                                                    <button class="btn btn-secondary btn-sm already-applied" disabled>
+                                                        <i class="fas fa-check"></i> Applied
+                                                    </button>
+                                                <?php else: ?>
+                                                    <button type="button" class="btn btn-primary btn-sm" 
+                                                            data-bs-toggle="modal" 
+                                                            data-bs-target="#applyModal<?= $row['id'] ?>">
+                                                        Apply Now
+                                                    </button>
+                                                <?php endif; ?>
                                             <?php elseif (!isset($_SESSION['user_email'])): ?>
                                                 <a href="connexion/login.php" class="btn btn-primary btn-sm">Login to Apply</a>
                                             <?php endif; ?>
@@ -316,6 +410,29 @@ $jobs = $stmt->get_result();
                                     </div>
                                 </div>
                             </div>
+                            
+                            <!-- Application Modal -->
+<div class="modal fade" id="applyModal<?= $row['id'] ?>" tabindex="-1" aria-labelledby="applyModalLabel<?= $row['id'] ?>" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="applyModalLabel<?= $row['id'] ?>">Confirm Application</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="job_search.php">
+                <div class="modal-body">
+                    <p>Are you sure you want to apply for the <strong><?= htmlspecialchars($row['title']) ?></strong> position at <strong><?= htmlspecialchars($row['company']) ?></strong>?</p>
+                    <p>Your profile information and CV will be sent to the recruiter.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <input type="hidden" name="job_id" value="<?= $row['id'] ?>">
+                    <button type="submit" name="apply_job" class="btn btn-primary">Confirm Application</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
                         <?php endwhile; ?>
                     </div>
                 <?php else: ?>

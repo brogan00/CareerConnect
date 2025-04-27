@@ -9,7 +9,7 @@ $job_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 $stmt = $conn->prepare("
     SELECT j.*, c.name AS company_name, c.location AS company_location, 
            c.website AS company_website, c.description AS company_description,
-           r.first_name AS recruiter_name, r.last_name AS recruiter_last_name
+           r.first_name AS recruiter_name, r.last_name AS recruiter_last_name, r.id AS recruiter_id, r.email AS recruiter_email
     FROM job j
     JOIN recruiter r ON j.recruiter_id = r.id
     JOIN company c ON r.company_id = c.id
@@ -23,6 +23,62 @@ $stmt->close();
 if (!$job) {
     header("Location: job_search.php");
     exit();
+}
+
+// Handle job application
+if (isset($_POST['apply_job']) && isset($_SESSION['user_email']) && $_SESSION['user_type'] === 'candidat') {
+    $user_id = $_SESSION['user_email'];
+    
+    // Check if already applied
+    $check_stmt = $conn->prepare("SELECT id FROM application WHERE user_id = ? AND job_id = ?");
+    $check_stmt->bind_param("ii", $user_id, $job_id);
+    $check_stmt->execute();
+    $check_result = $check_stmt->get_result();
+    
+    if ($check_result->num_rows == 0) {
+        // Insert application with pending status
+        $insert_stmt = $conn->prepare("INSERT INTO application (user_id, job_id, status) VALUES (?, ?, 'pending')");
+        $insert_stmt->bind_param("ii", $user_email, $job_id);
+        $insert_stmt->execute();
+        $application_id = $insert_stmt->insert_id;
+        $insert_stmt->close();
+        
+        // Create notification for recruiter
+        $candidate_stmt = $conn->prepare("SELECT first_name, last_name FROM users WHERE id = ?");
+        $candidate_stmt->bind_param("i", $user_id);
+        $candidate_stmt->execute();
+        $candidate = $candidate_stmt->get_result()->fetch_assoc();
+        $candidate_stmt->close();
+        
+        $message = "New application from " . $candidate['first_name'] . " " . $candidate['last_name'] . " for your job: " . $job['title'];
+        
+        $notif_stmt = $conn->prepare("INSERT INTO notifications (user_id, recruiter_id, message, type, related_id) 
+                                    VALUES (?, ?, ?, 'application', ?)");
+        $notif_stmt->bind_param("iisi", $user_id, $job['recruiter_id'], $message, $application_id);
+        $notif_stmt->execute();
+        $notif_stmt->close();
+        
+        $_SESSION['success_message'] = "Your application has been submitted successfully! The recruiter will review it soon.";
+    } else {
+        $_SESSION['error_message'] = "You have already applied for this job.";
+    }
+    
+    $check_stmt->close();
+    header("Location: job_details.php?id=" . $job_id);
+    exit();
+}
+
+// Check application status if user is candidate
+$application_status = null;
+if (isset($_SESSION['user_id']) && $_SESSION['user_type'] === 'candidat') {
+    $status_stmt = $conn->prepare("SELECT status FROM application WHERE user_id = ? AND job_id = ?");
+    $status_stmt->bind_param("ii", $_SESSION['user_id'], $job_id);
+    $status_stmt->execute();
+    $status_result = $status_stmt->get_result();
+    if ($status_result->num_rows > 0) {
+        $application_status = $status_result->fetch_assoc()['status'];
+    }
+    $status_stmt->close();
 }
 ?>
 
@@ -84,12 +140,26 @@ if (!$job) {
             padding: 0.75rem 2rem;
             font-weight: 600;
         }
+        .status-badge {
+            font-size: 1rem;
+            padding: 0.5rem 1rem;
+        }
     </style>
 </head>
 <body>
     <?php include "templates/header.php" ?>
 
     <div class="container py-5">
+        <?php if (isset($_SESSION['success_message'])): ?>
+            <div class="alert alert-success"><?= $_SESSION['success_message'] ?></div>
+            <?php unset($_SESSION['success_message']); ?>
+        <?php endif; ?>
+        
+        <?php if (isset($_SESSION['error_message'])): ?>
+            <div class="alert alert-danger"><?= $_SESSION['error_message'] ?></div>
+            <?php unset($_SESSION['error_message']); ?>
+        <?php endif; ?>
+        
         <div class="job-header text-center">
             <div class="container">
                 <h1 class="display-5 mb-3"><?= htmlspecialchars($job['title']) ?></h1>
@@ -183,9 +253,28 @@ if (!$job) {
 
                 <div class="d-grid gap-2">
                     <?php if (isset($_SESSION['user_email']) && $_SESSION['user_type'] === 'candidat'): ?>
-                        <a href="apply_job.php?id=<?= $job['id'] ?>" class="btn btn-primary apply-btn">
-                            <i class="fas fa-paper-plane me-2"></i> Apply Now
-                        </a>
+                        <?php if ($application_status): ?>
+                            <?php if ($application_status == 'pending'): ?>
+                                <div class="alert alert-info text-center">
+                                    <i class="fas fa-clock me-2"></i> Your application is pending review
+                                </div>
+                            <?php elseif ($application_status == 'accepted'): ?>
+                                <div class="alert alert-success text-center">
+                                    <i class="fas fa-check-circle me-2"></i> Your application has been accepted!
+                                    <p class="mt-2 mb-0">Contact the recruiter at: <a href="mailto:<?= htmlspecialchars($job['recruiter_email']) ?>"><?= htmlspecialchars($job['recruiter_email']) ?></a></p>
+                                </div>
+                            <?php elseif ($application_status == 'rejected'): ?>
+                                <div class="alert alert-danger text-center">
+                                    <i class="fas fa-times-circle me-2"></i> Your application was not accepted
+                                </div>
+                            <?php endif; ?>
+                        <?php else: ?>
+                            <form method="post">
+                                <button type="submit" name="apply_job" class="btn btn-primary apply-btn w-100">
+                                    <i class="fas fa-paper-plane me-2"></i> Apply Now
+                                </button>
+                            </form>
+                        <?php endif; ?>
                     <?php elseif (!isset($_SESSION['user_email'])): ?>
                         <a href="connexion/login.php" class="btn btn-primary apply-btn">
                             <i class="fas fa-sign-in-alt me-2"></i> Login to Apply
