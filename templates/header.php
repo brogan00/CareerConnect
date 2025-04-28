@@ -7,10 +7,13 @@ if (isset($_SESSION['user_email'])) {
     if (isset($_SESSION['user_type'])) {
         if ($_SESSION['user_type'] == "recruiter") {
             $stmt = $conn->prepare("SELECT first_name, last_name, profile_picture FROM recruiter WHERE email = ?");
+            $dashboard_link = "recruiter_dashboard.php";
         } else if ($_SESSION['user_type'] == "candidat") {
             $stmt = $conn->prepare("SELECT first_name, last_name, profile_picture FROM users WHERE email = ?");
+            $dashboard_link = "candidate_dashboard.php";
         } else if ($_SESSION['user_type'] == "admin") {
             $stmt = $conn->prepare("SELECT first_name, last_name, profile_picture FROM users WHERE email = ?");
+            $dashboard_link = "admin_dashboard.php";
         } else {
             die('Invalid user type!');
         }
@@ -25,24 +28,6 @@ if (isset($_SESSION['user_email'])) {
     if (!$profile_picture) {
         $profile_picture = "./assets/images/hamidou.png";
     }
-
-    // Get notification count (you'll need to implement this query based on your database structure)
-    //! not now 
-    /*
-    $notification_count = 0;
-    if ($_SESSION['user_type'] == "candidat") {
-        $stmt = $conn->prepare("SELECT COUNT(*) FROM notifications WHERE user_id = (SELECT id FROM users WHERE email = ?) AND is_read = 0");
-    } else if ($_SESSION['user_type'] == "recruiter") {
-        $stmt = $conn->prepare("SELECT COUNT(*) FROM notifications WHERE recruiter_id = (SELECT id FROM recruiter WHERE email = ?) AND is_read = 0");
-    } else if ($_SESSION['user_type'] == "admin") {
-        $stmt = $conn->prepare("SELECT COUNT(*) FROM notifications WHERE admin_id = (SELECT id FROM users WHERE email = ?) AND is_read = 0");
-    }
-    $stmt->bind_param("s", $_SESSION['user_email']);
-    $stmt->execute();
-    $stmt->bind_result($notification_count);
-    $stmt->fetch();
-    $stmt->close();
-    */
 }
 ?>
 
@@ -83,15 +68,10 @@ if (isset($_SESSION['user_email'])) {
 
         <?php if (isset($_SESSION['user_email'])): ?>
             <div class="d-flex ms-auto align-items-center mt-2 mt-lg-0">
-                <?php if ($_SESSION['user_type'] == 'candidat'): ?>
-                    <a href="candidate_dashboard.php" class="btn btn-outline-primary me-3">
-                        <i class="bi bi-speedometer2 me-1"></i> Dashboard
-                    </a>
-                <?php elseif ($_SESSION['user_type'] == 'recruiter'): ?>
-                    <a href="recruiter_dashboard.php" class="btn btn-outline-primary me-3">
-                        <i class="bi bi-speedometer2 me-1"></i> Dashboard
-                    </a>
-                <?php endif; ?>
+                <!-- Added Dashboard Button -->
+                <a href="<?php echo $dashboard_link; ?>" class="btn btn-outline-primary me-3">
+                    <i class="bi bi-speedometer2 me-1"></i> Dashboard
+                </a>
 
                 <a href="profile.php" class="d-flex align-items-center text-decoration-none me-3">
                     <img src="<?php echo htmlspecialchars($profile_picture); ?>" width="45" height="45" class="rounded-circle border border-secondary shadow-sm me-2" alt="Profile" />

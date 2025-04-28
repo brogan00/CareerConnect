@@ -1,54 +1,66 @@
 <?php
-include "connexion/config.php";
-define('SECURE_ACCESS', true);
+// Start session and check authentication
 session_start();
-
-// Redirect if not logged in as candidate
-if (!isset($_SESSION['user_email']) || $_SESSION['user_type'] !== 'candidat') {
+if (!isset($_SESSION['user_email']) || !isset($_SESSION['user_type']) || $_SESSION['user_type'] !== 'candidat') {
     header("Location: connexion/login.php");
     exit();
 }
 
-$user_id = $_SESSION['user_email'];
+// Database connection
+require_once "connexion/config.php";
 
-// Get user applications with job details
-$stmt = $conn->prepare("
-    SELECT a.*, j.title AS job_title, j.type_contract, j.salary,
-           c.name AS company_name, r.first_name AS recruiter_first, 
-           r.last_name AS recruiter_last, r.email AS recruiter_email,
-           a.status AS application_status
+// Get candidate info
+$email = $_SESSION['user_email'];
+$stmt = $conn->prepare("SELECT * FROM users WHERE email = ?");
+$stmt->bind_param("s", $email);
+$stmt->execute();
+$candidate = $stmt->get_result()->fetch_assoc();
+$stmt->close();
+
+if (!$candidate) {
+    die("Candidate not found");
+}
+
+$user_id = $candidate['id'];
+
+// Get applications count
+$count_stmt = $conn->prepare("SELECT 
+    COUNT(*) as total,
+    SUM(status = 'pending') as pending,
+    SUM(status = 'approved') as approved,
+    SUM(status = 'rejected') as rejected
+    FROM application WHERE user_id = ?");
+$count_stmt->bind_param("i", $user_id);
+$count_stmt->execute();
+$counts = $count_stmt->get_result()->fetch_assoc();
+$count_stmt->close();
+
+// Get recent applications
+$apps_stmt = $conn->prepare("SELECT a.*, j.title, c.name as company 
     FROM application a
     JOIN job j ON a.job_id = j.id
     JOIN recruiter r ON j.recruiter_id = r.id
     JOIN company c ON r.company_id = c.id
     WHERE a.user_id = ?
     ORDER BY a.applied_at DESC
-");
-$stmt->bind_param("i", $user_id);
-$stmt->execute();
-$applications = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-$stmt->close();
+    LIMIT 5");
+$apps_stmt->bind_param("i", $user_id);
+$apps_stmt->execute();
+$applications = $apps_stmt->get_result();
+$apps_stmt->close();
 
-// Get unread notifications
-$notif_stmt = $conn->prepare("
-    SELECT * FROM notifications 
-    WHERE user_id = ? AND is_read = 0
-    ORDER BY created_at DESC
-    LIMIT 5
-");
-$notif_stmt->bind_param("i", $user_id);
-$notif_stmt->execute();
-$notifications = $notif_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-$notif_stmt->close();
-
-// Mark notifications as read when viewing dashboard
-$mark_read = $conn->prepare("
-    UPDATE notifications SET is_read = 1 
-    WHERE user_id = ? AND is_read = 0
-");
-$mark_read->bind_param("i", $user_id);
-$mark_read->execute();
-$mark_read->close();
+// Time elapsed function
+function timeAgo($date) {
+    $diff = time() - strtotime($date);
+    if ($diff < 60) return "just now";
+    $diff = round($diff/60);
+    if ($diff < 60) return "$diff min ago";
+    $diff = round($diff/60);
+    if ($diff < 24) return "$diff hours ago";
+    $diff = round($diff/24);
+    if ($diff < 7) return "$diff days ago";
+    return date('M j, Y', strtotime($date));
+}
 ?>
 
 <!DOCTYPE html>
@@ -56,26 +68,75 @@ $mark_read->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Candidate Dashboard - CareerConnect</title>
-    <link rel="stylesheet" href="assets/CSS/bootstrap.min.css">
-    <link rel="stylesheet" href="assets/icons/all.min.css">
-    <link rel="stylesheet" href="assets/CSS/style.css">
+    <title>Candidate Dashboard</title>
+    
+    <!-- Bootstrap CSS -->
     <style>
-        .dashboard-card {
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            margin-bottom: 2rem;
-            border: none;
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
         }
-        .status-badge {
-            font-size: 0.9rem;
-            padding: 0.35rem 0.75rem;
+        .header {
+            background-color: #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            padding: 15px 0;
+        }
+        .dashboard {
+            padding: 20px;
+        }
+        .card {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            padding: 20px;
+        }
+        .stats {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-box {
+            flex: 1;
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .stat-box h3 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .stat-box p {
+            margin: 5px 0 0;
+            color: #666;
+        }
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .table th, .table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        .table th {
+            background-color: #f8f9fa;
+        }
+        .badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: normal;
         }
         .badge-pending {
             background-color: #fff3cd;
             color: #856404;
         }
-        .badge-accepted {
+        .badge-approved {
             background-color: #d4edda;
             color: #155724;
         }
@@ -83,129 +144,94 @@ $mark_read->close();
             background-color: #f8d7da;
             color: #721c24;
         }
-        .notification-item {
-            border-left: 3px solid #0d6efd;
-            padding: 0.75rem;
-            margin-bottom: 0.75rem;
-            background-color: #f8f9fa;
+        .btn {
+            padding: 8px 15px;
+            border-radius: 4px;
+            text-decoration: none;
+            display: inline-block;
         }
-        .job-card {
-            transition: transform 0.2s;
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+            border: none;
         }
-        .job-card:hover {
-            transform: translateY(-3px);
+        .profile-img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
         }
     </style>
 </head>
 <body>
-    <?php include "templates/header.php" ?>
-
-    <div class="container py-5">
-        <div class="row">
-            <div class="col-md-4">
-                <div class="card dashboard-card">
-                    <div class="card-body text-center">
-                        <h5 class="card-title">My Applications</h5>
-                        <h1 class="display-4"><?= count($applications) ?></h1>
-                        <div class="d-flex justify-content-center gap-2 mt-3">
-                            <span class="badge bg-success"><?= count(array_filter($applications, fn($app) => $app['application_status'] == 'accepted')) ?> Accepted</span>
-                            <span class="badge bg-warning text-dark"><?= count(array_filter($applications, fn($app) => $app['application_status'] == 'pending')) ?> Pending</span>
-                            <span class="badge bg-danger"><?= count(array_filter($applications, fn($app) => $app['application_status'] == 'rejected')) ?> Rejected</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="card dashboard-card">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0">Recent Notifications</h5>
-                    </div>
-                    <div class="card-body">
-                        <?php if (count($notifications) > 0): ?>
-                            <?php foreach ($notifications as $notif): ?>
-                                <div class="notification-item">
-                                    <p class="mb-1"><?= htmlspecialchars($notif['message']) ?></p>
-                                    <small class="text-muted"><?= date('M d, Y H:i', strtotime($notif['created_at'])) ?></small>
-                                </div>
-                            <?php endforeach; ?>
-                            <a href="notifications.php" class="btn btn-sm btn-outline-primary w-100 mt-2">View All</a>
-                        <?php else: ?>
-                            <p class="text-muted">No new notifications</p>
-                        <?php endif; ?>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-md-8">
-                <div class="card dashboard-card">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0">My Applications</h5>
-                    </div>
-                    <div class="card-body">
-                        <?php if (count($applications) > 0): ?>
-                            <div class="row">
-                                <?php foreach ($applications as $app): ?>
-                                    <div class="col-md-6 mb-3">
-                                        <div class="card job-card h-100">
-                                            <div class="card-body">
-                                                <h5 class="card-title"><?= htmlspecialchars($app['job_title']) ?></h5>
-                                                <h6 class="card-subtitle mb-2 text-muted"><?= htmlspecialchars($app['company_name']) ?></h6>
-                                                
-                                                <p class="card-text mt-3">
-                                                    <span class="badge bg-primary"><?= htmlspecialchars($app['type_contract']) ?></span>
-                                                    <span class="badge bg-success"><?= number_format($app['salary']) ?> DZ</span>
-                                                </p>
-                                                
-                                                <?php 
-                                                $badge_class = '';
-                                                if ($app['application_status'] == 'accepted') $badge_class = 'badge-accepted';
-                                                elseif ($app['application_status'] == 'rejected') $badge_class = 'badge-rejected';
-                                                else $badge_class = 'badge-pending';
-                                                ?>
-                                                <p class="card-text">
-                                                    Status: <span class="badge rounded-pill status-badge <?= $badge_class ?>">
-                                                        <?= ucfirst($app['application_status']) ?>
-                                                    </span>
-                                                </p>
-                                                
-                                                <p class="card-text">
-                                                    <small class="text-muted">
-                                                        Applied on <?= date('M d, Y', strtotime($app['applied_at'])) ?>
-                                                    </small>
-                                                </p>
-                                                
-                                                <?php if ($app['application_status'] == 'accepted'): ?>
-                                                    <div class="mt-3 p-2 bg-light rounded">
-                                                        <p class="mb-1"><strong>Recruiter Contact:</strong></p>
-                                                        <p class="mb-1">
-                                                            <i class="fas fa-user-tie me-2"></i>
-                                                            <?= htmlspecialchars($app['recruiter_first'] . ' ' . $app['recruiter_last']) ?>
-                                                        </p>
-                                                        <p class="mb-0">
-                                                            <i class="fas fa-envelope me-2"></i>
-                                                            <a href="mailto:<?= htmlspecialchars($app['recruiter_email']) ?>">
-                                                                <?= htmlspecialchars($app['recruiter_email']) ?>
-                                                            </a>
-                                                        </p>
-                                                    </div>
-                                                <?php endif; ?>
-                                            </div>
-                                        </div>
-                                    </div>
-                                <?php endforeach; ?>
-                            </div>
-                        <?php else: ?>
-                            <p class="text-muted">You haven't applied to any jobs yet.</p>
-                            <a href="job_search.php" class="btn btn-primary">Browse Jobs</a>
-                        <?php endif; ?>
-                    </div>
-                </div>
+    <div class="header">
+        <div style="max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center;">
+            <h1>CareerConnect</h1>
+            <div>
+                <img src="<?= $candidate['profile_picture'] ?? 'assets/images/default-profile.jpg' ?>" class="profile-img" alt="Profile">
+                <span><?= htmlspecialchars($candidate['first_name'].' '.$candidate['last_name']) ?></span>
+                <a href="connexion/do.logout.php" class="btn btn-primary">Logout</a>
             </div>
         </div>
     </div>
 
-    <?php include "templates/footer.php" ?>
+    <div class="dashboard" style="max-width: 1200px; margin: 0 auto;">
+        <h2>Candidate Dashboard</h2>
+        
+        <div class="stats">
+            <div class="stat-box">
+                <h3><?= $counts['total'] ?? 0 ?></h3>
+                <p>Total Applications</p>
+            </div>
+            <div class="stat-box">
+                <h3><?= $counts['pending'] ?? 0 ?></h3>
+                <p>Pending</p>
+            </div>
+            <div class="stat-box">
+                <h3><?= $counts['approved'] ?? 0 ?></h3>
+                <p>Approved</p>
+            </div>
+            <div class="stat-box">
+                <h3><?= $counts['rejected'] ?? 0 ?></h3>
+                <p>Rejected</p>
+            </div>
+        </div>
 
-    <script src="assets/JS/bootstrap.bundle.min.js"></script>
-    <script src="assets/icons/all.min.js"></script>
+        <div class="card">
+            <h3>Recent Applications</h3>
+            <?php if ($applications->num_rows > 0): ?>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Job Title</th>
+                            <th>Company</th>
+                            <th>Status</th>
+                            <th>Applied</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php while ($app = $applications->fetch_assoc()): ?>
+                            <tr>
+                                <td><?= htmlspecialchars($app['title']) ?></td>
+                                <td><?= htmlspecialchars($app['company']) ?></td>
+                                <td>
+                                    <span class="badge badge-<?= $app['status'] ?>">
+                                        <?= ucfirst($app['status']) ?>
+                                    </span>
+                                </td>
+                                <td><?= timeAgo($app['applied_at']) ?></td>
+                                <td>
+                                    <a href="job_details.php?id=<?= $app['job_id'] ?>" class="btn btn-primary">View</a>
+                                </td>
+                            </tr>
+                        <?php endwhile; ?>
+                    </tbody>
+                </table>
+            <?php else: ?>
+                <p>You haven't applied to any jobs yet. <a href="job_search.php">Browse jobs</a></p>
+            <?php endif; ?>
+        </div>
+    </div>
 </body>
 </html>
