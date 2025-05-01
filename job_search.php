@@ -3,6 +3,58 @@ include "connexion/config.php";
 define('SECURE_ACCESS', true);
 session_start();
 
+// Handle job application
+if (isset($_POST['apply_job']) && isset($_SESSION['user_email']) && $_SESSION['user_type'] === 'candidat') {
+    $job_id = intval($_POST['job_id']);
+    $user_id = $_SESSION['user_id'];
+    
+    // Get recruiter_id for this job
+    $recruiter_stmt = $conn->prepare("SELECT recruiter_id FROM job WHERE id = ?");
+    $recruiter_stmt->bind_param("i", $job_id);
+    $recruiter_stmt->execute();
+    $recruiter_result = $recruiter_stmt->get_result();
+    
+    if ($recruiter_result->num_rows > 0) {
+        $job = $recruiter_result->fetch_assoc();
+        $recruiter_id = $job['recruiter_id'];
+        
+        // Check if already applied
+        $check_stmt = $conn->prepare("SELECT id FROM application WHERE user_id = ? AND job_id = ?");
+        $check_stmt->bind_param("ii", $user_id, $job_id);
+        $check_stmt->execute();
+        $check_result = $check_stmt->get_result();
+        
+        if ($check_result->num_rows == 0) {
+            // Insert application
+            $insert_stmt = $conn->prepare("INSERT INTO application (user_id, job_id, status) VALUES (?, ?, 'pending')");
+            $insert_stmt->bind_param("ii", $user_id, $job_id);
+            
+            if ($insert_stmt->execute()) {
+                $application_id = $conn->insert_id; // Get the last inserted ID
+                
+                // Create notification
+                $first_name = $_SESSION['first_name'] ?? 'A candidate';
+                $last_name = $_SESSION['last_name'] ?? '';
+                $message = "New application from " . $first_name . " " . $last_name;
+                
+                $notif_stmt = $conn->prepare("INSERT INTO notifications (recruiter_id, message, type, related_id) VALUES (?, ?, 'application', ?)");
+                $notif_stmt->bind_param("isi", $recruiter_id, $message, $application_id);
+                $notif_stmt->execute();
+                
+                $_SESSION['success_message'] = "Application submitted successfully!";
+            } else {
+                $_SESSION['error_message'] = "Failed to submit application";
+            }
+        } else {
+            $_SESSION['error_message'] = "You've already applied to this job";
+        }
+    }
+    
+    // Redirect back to avoid form resubmission
+    header("Location: job_search.php");
+    exit();
+}
+
 // Get company ID from URL if coming from company search
 $company_id = isset($_GET['company_id']) ? intval($_GET['company_id']) : 0;
 
@@ -210,6 +262,16 @@ $jobs = $stmt->get_result();
 
     <!-- Job Search Content -->
     <div class="container mt-5">
+        <?php if (isset($_SESSION['success_message'])): ?>
+            <div class="alert alert-success"><?= $_SESSION['success_message'] ?></div>
+            <?php unset($_SESSION['success_message']); ?>
+        <?php endif; ?>
+        
+        <?php if (isset($_SESSION['error_message'])): ?>
+            <div class="alert alert-danger"><?= $_SESSION['error_message'] ?></div>
+            <?php unset($_SESSION['error_message']); ?>
+        <?php endif; ?>
+
         <h2 class="text-center mb-4">Find Your Dream Job</h2>
         <div class="row">
             <!-- Filters -->
@@ -308,7 +370,27 @@ $jobs = $stmt->get_result();
                                         <div class="d-flex justify-content-between align-items-center">
                                             <a href="job_details.php?id=<?= $row['id'] ?>" class="btn btn-outline-primary btn-sm">View Details</a>
                                             <?php if (isset($_SESSION['user_email']) && $_SESSION['user_type'] === 'candidat'): ?>
-                                                <a href="apply_job.php?id=<?= $row['id'] ?>" class="btn btn-primary btn-sm">Apply Now</a>
+                                                <?php
+                                                // Check if already applied
+                                                $check_stmt = $conn->prepare("SELECT status FROM application WHERE user_id = ? AND job_id = ?");
+                                                $check_stmt->bind_param("ii", $_SESSION['user_id'], $row['id']);
+                                                $check_stmt->execute();
+                                                $check_result = $check_stmt->get_result();
+                                                ?>
+                                                <?php if ($check_result->num_rows > 0): ?>
+                                                    <?php $status = $check_result->fetch_assoc()['status']; ?>
+                                                    <span class="badge 
+                                                        <?= $status === 'accepted' ? 'bg-success' : 
+                                                           ($status === 'rejected' ? 'bg-danger' : 'bg-warning') ?>">
+                                                        <?= ucfirst($status) ?>
+                                                    </span>
+                                                <?php else: ?>
+                                                    <form method="post" action="job_search.php" style="display: inline;">
+                                                        <input type="hidden" name="job_id" value="<?= $row['id'] ?>">
+                                                        <button type="submit" name="apply_job" class="btn btn-primary btn-sm">Apply Now</button>
+                                                    </form>
+                                                <?php endif; ?>
+                                                <?php $check_stmt->close(); ?>
                                             <?php elseif (!isset($_SESSION['user_email'])): ?>
                                                 <a href="connexion/login.php" class="btn btn-primary btn-sm">Login to Apply</a>
                                             <?php endif; ?>

@@ -3,6 +3,52 @@ include "connexion/config.php";
 define('SECURE_ACCESS', true);
 session_start();
 
+// Handle job application
+if (isset($_POST['apply_job']) && isset($_SESSION['user_email']) && $_SESSION['user_type'] === 'candidat') {
+    $job_id = intval($_POST['job_id']);
+    $user_id = $_SESSION['user_id'];
+    
+    // Get recruiter_id for this job
+    $recruiter_stmt = $conn->prepare("SELECT recruiter_id FROM job WHERE id = ?");
+    $recruiter_stmt->bind_param("i", $job_id);
+    $recruiter_stmt->execute();
+    $recruiter_result = $recruiter_stmt->get_result();
+    
+    if ($recruiter_result->num_rows > 0) {
+        $job = $recruiter_result->fetch_assoc();
+        $recruiter_id = $job['recruiter_id'];
+        
+        // Check if already applied
+        $check_stmt = $conn->prepare("SELECT id FROM application WHERE user_id = ? AND job_id = ?");
+        $check_stmt->bind_param("ii", $user_id, $job_id);
+        $check_stmt->execute();
+        
+        if ($check_stmt->get_result()->num_rows == 0) {
+            // Insert application
+            $insert_stmt = $conn->prepare("INSERT INTO application (user_id, job_id, status) VALUES (?, ?, 'pending')");
+            $insert_stmt->bind_param("ii", $user_id, $job_id);
+            
+            if ($insert_stmt->execute()) {
+                // Create notification
+                $message = "New application from " . $_SESSION['first_name'] . " " . $_SESSION['last_name'];
+                $notif_stmt = $conn->prepare("INSERT INTO notifications (recruiter_id, message, type, related_id) VALUES (?, ?, 'application', ?)");
+                $notif_stmt->bind_param("isi", $recruiter_id, $message, $insert_stmt->insert_id);
+                $notif_stmt->execute();
+                
+                $_SESSION['success_message'] = "Application submitted successfully!";
+            } else {
+                $_SESSION['error_message'] = "Failed to submit application";
+            }
+        } else {
+            $_SESSION['error_message'] = "You've already applied to this job";
+        }
+    }
+    
+    // Redirect back to avoid form resubmission
+    header("Location: job_details.php?id=" . $job_id);
+    exit();
+}
+
 $job_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 
 // Get job details with company info
@@ -22,49 +68,6 @@ $stmt->close();
 
 if (!$job) {
     header("Location: job_search.php");
-    exit();
-}
-
-// Handle job application
-if (isset($_POST['apply_job']) && isset($_SESSION['user_email']) && $_SESSION['user_type'] === 'candidat') {
-    $user_id = $_SESSION['user_email'];
-    
-    // Check if already applied
-    $check_stmt = $conn->prepare("SELECT id FROM application WHERE user_id = ? AND job_id = ?");
-    $check_stmt->bind_param("ii", $user_id, $job_id);
-    $check_stmt->execute();
-    $check_result = $check_stmt->get_result();
-    
-    if ($check_result->num_rows == 0) {
-        // Insert application with pending status
-        $insert_stmt = $conn->prepare("INSERT INTO application (user_id, job_id, status) VALUES (?, ?, 'pending')");
-        $insert_stmt->bind_param("ii", $user_email, $job_id);
-        $insert_stmt->execute();
-        $application_id = $insert_stmt->insert_id;
-        $insert_stmt->close();
-        
-        // Create notification for recruiter
-        $candidate_stmt = $conn->prepare("SELECT first_name, last_name FROM users WHERE id = ?");
-        $candidate_stmt->bind_param("i", $user_id);
-        $candidate_stmt->execute();
-        $candidate = $candidate_stmt->get_result()->fetch_assoc();
-        $candidate_stmt->close();
-        
-        $message = "New application from " . $candidate['first_name'] . " " . $candidate['last_name'] . " for your job: " . $job['title'];
-        
-        $notif_stmt = $conn->prepare("INSERT INTO notifications (user_id, recruiter_id, message, type, related_id) 
-                                    VALUES (?, ?, ?, 'application', ?)");
-        $notif_stmt->bind_param("iisi", $user_id, $job['recruiter_id'], $message, $application_id);
-        $notif_stmt->execute();
-        $notif_stmt->close();
-        
-        $_SESSION['success_message'] = "Your application has been submitted successfully! The recruiter will review it soon.";
-    } else {
-        $_SESSION['error_message'] = "You have already applied for this job.";
-    }
-    
-    $check_stmt->close();
-    header("Location: job_details.php?id=" . $job_id);
     exit();
 }
 
@@ -270,6 +273,7 @@ if (isset($_SESSION['user_id']) && $_SESSION['user_type'] === 'candidat') {
                             <?php endif; ?>
                         <?php else: ?>
                             <form method="post">
+                                <input type="hidden" name="job_id" value="<?= $job_id ?>">
                                 <button type="submit" name="apply_job" class="btn btn-primary apply-btn w-100">
                                     <i class="fas fa-paper-plane me-2"></i> Apply Now
                                 </button>
