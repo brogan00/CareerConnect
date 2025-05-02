@@ -8,6 +8,12 @@ if (!isset($_SESSION['user_email']) || $_SESSION['user_type'] !== 'candidat') {
     header("Location: connexion/login.php");
     exit();
 }
+$user_id_query = $conn->prepare("SELECT id FROM users WHERE email = ?");
+$user_id_query->bind_param("s", $_SESSION['user_email']);
+$user_id_query->execute();
+$result = $user_id_query->get_result();
+$user_data = $result->fetch_assoc();
+$user_id = $user_data['id'];
 
 // Get candidate applications
 $stmt = $conn->prepare("
@@ -19,7 +25,7 @@ $stmt = $conn->prepare("
     WHERE a.user_id = ?
     ORDER BY a.applied_at DESC
 ");
-$stmt->bind_param("i", $_SESSION['user_id']);
+$stmt->bind_param("i", $user_id);
 $stmt->execute();
 $applications = $stmt->get_result();
 ?>

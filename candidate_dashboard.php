@@ -8,6 +8,12 @@ if (!isset($_SESSION['user_email']) || $_SESSION['user_type'] !== 'candidat') {
     header("Location: connexion/login.php");
     exit();
 }
+$user_id_query = $conn->prepare("SELECT id FROM users WHERE email = ?");
+$user_id_query->bind_param("s", $_SESSION['user_email']);
+$user_id_query->execute();
+$result = $user_id_query->get_result();
+$user_data = $result->fetch_assoc();
+$user_id = $user_data['id'];
 
 // Get candidate applications
 $stmt = $conn->prepare("
@@ -19,14 +25,14 @@ $stmt = $conn->prepare("
     WHERE a.user_id = ?
     ORDER BY a.applied_at DESC
 ");
-$stmt->bind_param("i", $_SESSION['user_id']);
+$stmt->bind_param("i",$user_id);
 $stmt->execute();
 $applications = $stmt->get_result();
 
 // Get candidate profile
 $profile = null;
 $profile_stmt = $conn->prepare("SELECT * FROM users WHERE id = ?");
-$profile_stmt->bind_param("i", $_SESSION['user_id']);
+$profile_stmt->bind_param("i", $user_id);
 if ($profile_stmt->execute()) {
     $profile_result = $profile_stmt->get_result();
     if ($profile_result->num_rows > 0) {
@@ -42,7 +48,7 @@ $notifications_stmt = $conn->prepare("
     ORDER BY created_at DESC
     LIMIT 5
 ");
-$notifications_stmt->bind_param("i", $_SESSION['user_id']);
+$notifications_stmt->bind_param("i", $user_id);
 $notifications_stmt->execute();
 $notifications = $notifications_stmt->get_result();
 
@@ -124,7 +130,7 @@ $profile_picture = $profile['profile_picture'] ?? null;
                                 <a class="nav-link active" href="candidate_dashboard.php"><i class="fas fa-tachometer-alt me-2"></i> Dashboard</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="edit_profile.php"><i class="fas fa-user-edit me-2"></i> Edit Profile</a>
+                                <a class="nav-link" href="profile.php"><i class="fas fa-user-edit me-2"></i> Edit Profile</a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="my_applications.php"><i class="fas fa-file-alt me-2"></i> My Applications</a>
@@ -274,7 +280,7 @@ $profile_picture = $profile['profile_picture'] ?? null;
                             JOIN company c ON r.company_id = c.id
                             WHERE j.status = 'approved'
                             AND j.id NOT IN (
-                                SELECT job_id FROM application WHERE user_id = ".$_SESSION['user_id']."
+                                SELECT job_id FROM application WHERE user_id = ".$user_id."
                             )
                             ORDER BY j.created_at DESC
                             LIMIT 3
@@ -327,7 +333,7 @@ $profile_picture = $profile['profile_picture'] ?? null;
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                 },
-                body: 'user_id=<?= $_SESSION['user_id'] ?>'
+                body: 'user_id=<?= $user_id ?>'
             });
         });
     </script>

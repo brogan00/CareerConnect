@@ -9,46 +9,58 @@ if (!isset($_SESSION['user_email']) || $_SESSION['user_type'] !== 'recruiter') {
     exit();
 }
 
-$recruiter_id = $_SESSION['user_email'];
+$recruiter_email = $_SESSION['user_email'];
 
 // Handle application approval/rejection
 if (isset($_GET['action']) && isset($_GET['id'])) {
     $application_id = (int)$_GET['id'];
     $action = $_GET['action'];
     
-    // Verify application belongs to this recruiter
-    $verify_stmt = $conn->prepare("
-        SELECT a.id, a.user_id, j.title 
-        FROM application a 
-        JOIN job j ON a.job_id = j.id 
-        WHERE a.id = ? AND j.recruiter_id = ?
-    ");
-    $verify_stmt->bind_param("ii", $application_id, $recruiter_id);
-    $verify_stmt->execute();
-    $verify_result = $verify_stmt->get_result();
+    // First get the recruiter's ID
+    $recruiter_id_stmt = $conn->prepare("SELECT id FROM recruiter WHERE email = ?");
+    $recruiter_id_stmt->bind_param("s", $recruiter_email);
+    $recruiter_id_stmt->execute();
+    $recruiter_id_result = $recruiter_id_stmt->get_result();
     
-    if ($verify_result->num_rows > 0) {
-        $app_data = $verify_result->fetch_assoc();
-        $status = ($action === 'accept') ? 'accepted' : 'rejected';
+    if ($recruiter_id_result->num_rows > 0) {
+        $recruiter_id = $recruiter_id_result->fetch_assoc()['id'];
         
-        // Update application status
-        $update_stmt = $conn->prepare("UPDATE application SET status = ? WHERE id = ?");
-        $update_stmt->bind_param("si", $status, $application_id);
-        $update_stmt->execute();
-        
-        // Create notification
-        $message = "Your application for '{$app_data['title']}' has been $status";
-        $notif_stmt = $conn->prepare("
-            INSERT INTO notifications (user_id, message, type, related_id) 
-            VALUES (?, ?, 'application', ?)
+        // Verify application belongs to this recruiter
+        $verify_stmt = $conn->prepare("
+            SELECT a.id, a.user_id, j.title 
+            FROM application a 
+            JOIN job j ON a.job_id = j.id 
+            WHERE a.id = ? AND j.recruiter_id = ?
         ");
-        $notif_type = ($action === 'accept') ? 'cv_approval' : 'cv_rejection';
-        $notif_stmt->bind_param("isi", $app_data['user_id'], $message, $notif_type, $application_id);
-        $notif_stmt->execute();
+        $verify_stmt->bind_param("ii", $application_id, $recruiter_id);
+        $verify_stmt->execute();
+        $verify_result = $verify_stmt->get_result();
         
-        $_SESSION['success_message'] = "Application $status successfully!";
+        if ($verify_result->num_rows > 0) {
+            $app_data = $verify_result->fetch_assoc();
+            $status = ($action === 'accept') ? 'accepted' : 'rejected';
+            
+            // Update application status
+            $update_stmt = $conn->prepare("UPDATE application SET status = ? WHERE id = ?");
+            $update_stmt->bind_param("si", $status, $application_id);
+            $update_stmt->execute();
+            
+            // Create notification
+            $message = "Your application for '{$app_data['title']}' has been $status";
+            $notif_stmt = $conn->prepare("
+                INSERT INTO notifications (user_id, message, type, related_id) 
+                VALUES (?, ?, 'application', ?)
+            ");
+            $notif_type = ($action === 'accept') ? 'cv_approval' : 'cv_rejection';
+            $notif_stmt->bind_param("isi", $app_data['user_id'], $message, $notif_type, $application_id);
+            $notif_stmt->execute();
+            
+            $_SESSION['success_message'] = "Application $status successfully!";
+        } else {
+            $_SESSION['error_message'] = "Invalid application";
+        }
     } else {
-        $_SESSION['error_message'] = "Invalid application";
+        $_SESSION['error_message'] = "Recruiter not found";
     }
     
     header("Location: recruiter_dashboard.php");
@@ -60,14 +72,23 @@ $recruiter_stmt = $conn->prepare("
     SELECT r.*, c.name AS company_name 
     FROM recruiter r
     LEFT JOIN company c ON r.company_id = c.id
-    WHERE r.id = ?
+    WHERE r.email = ?
 ");
-$recruiter_stmt->bind_param("i", $recruiter_id);
+$recruiter_stmt->bind_param("s", $recruiter_email);
 $recruiter_stmt->execute();
-$recruiter_profile = $recruiter_stmt->get_result()->fetch_assoc();
+$recruiter_result = $recruiter_stmt->get_result();
+$recruiter_profile = $recruiter_result->fetch_assoc();
 $recruiter_stmt->close();
 
-// Get applications for recruiter's jobs
+if (!$recruiter_profile) {
+    $_SESSION['error_message'] = "Recruiter profile not found";
+    header("Location: connexion/login.php");
+    exit();
+}
+
+$recruiter_id = $recruiter_profile['id'];
+
+// Get applications for recruiter's jobs - FIXED THIS QUERY
 $applications_stmt = $conn->prepare("
     SELECT a.*, j.title AS job_title, 
            u.first_name, u.last_name, u.email, u.profile_picture,
@@ -75,11 +96,12 @@ $applications_stmt = $conn->prepare("
     FROM application a
     JOIN job j ON a.job_id = j.id
     JOIN users u ON a.user_id = u.id
-    JOIN company c ON j.recruiter_id = ?
+    JOIN recruiter r ON j.recruiter_id = r.id
+    LEFT JOIN company c ON r.company_id = c.id
     WHERE j.recruiter_id = ?
     ORDER BY a.applied_at DESC
 ");
-$applications_stmt->bind_param("ii", $recruiter_id, $recruiter_id);
+$applications_stmt->bind_param("i", $recruiter_id);
 $applications_stmt->execute();
 $applications = $applications_stmt->get_result();
 
@@ -118,7 +140,7 @@ $jobs = $jobs_stmt->get_result();
     <div class="container py-5">
         <?php if (isset($_SESSION['success_message'])): ?>
             <div class="alert alert-success alert-dismissible fade show">
-                <?= $_SESSION['success_message'] ?>
+                <?= htmlspecialchars($_SESSION['success_message']) ?>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
             <?php unset($_SESSION['success_message']); ?>
@@ -126,7 +148,7 @@ $jobs = $jobs_stmt->get_result();
         
         <?php if (isset($_SESSION['error_message'])): ?>
             <div class="alert alert-danger alert-dismissible fade show">
-                <?= $_SESSION['error_message'] ?>
+                <?= htmlspecialchars($_SESSION['error_message']) ?>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
             <?php unset($_SESSION['error_message']); ?>
@@ -139,7 +161,7 @@ $jobs = $jobs_stmt->get_result();
                     <div class="card-body">
                         <div class="text-center mb-3">
                             <div class="profile-container mx-auto mb-2">
-                                <?php if ($recruiter_profile && !empty($recruiter_profile['profile_picture'])): ?>
+                                <?php if (!empty($recruiter_profile['profile_picture'])): ?>
                                     <img src="<?= htmlspecialchars($recruiter_profile['profile_picture']) ?>" 
                                          class="img-fluid" alt="Profile">
                                 <?php else: ?>
@@ -148,8 +170,8 @@ $jobs = $jobs_stmt->get_result();
                                     </div>
                                 <?php endif; ?>
                             </div>
-                            <h5><?= htmlspecialchars($recruiter_profile['first_name'] . ' ' . $recruiter_profile['last_name']) ?></h5>
-                            <p class="text-muted small"><?= htmlspecialchars($recruiter_profile['company_name']) ?></p>
+                            <h5><?= htmlspecialchars(($recruiter_profile['first_name'] ?? '') . ' ' . ($recruiter_profile['last_name'] ?? '')) ?></h5>
+                            <p class="text-muted small"><?= htmlspecialchars($recruiter_profile['company_name'] ?? 'No company') ?></p>
                         </div>
                         <hr>
                         <ul class="nav nav-pills flex-column">
@@ -195,29 +217,29 @@ $jobs = $jobs_stmt->get_result();
                                                             </div>
                                                         <?php endif; ?>
                                                         <div>
-                                                            <div><?= htmlspecialchars($app['first_name'] . ' ' . $app['last_name']) ?></div>
-                                                            <div class="small text-muted"><?= htmlspecialchars($app['email']) ?></div>
+                                                            <div><?= htmlspecialchars(($app['first_name'] ?? '') . ' ' . ($app['last_name'] ?? '')) ?></div>
+                                                            <div class="small text-muted"><?= htmlspecialchars($app['email'] ?? '') ?></div>
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td><?= htmlspecialchars($app['job_title']) ?></td>
-                                                <td><?= htmlspecialchars($app['company_name']) ?></td>
-                                                <td><?= date('M d, Y', strtotime($app['applied_at'])) ?></td>
+                                                <td><?= htmlspecialchars($app['job_title'] ?? '') ?></td>
+                                                <td><?= htmlspecialchars($app['company_name'] ?? '') ?></td>
+                                                <td><?= !empty($app['applied_at']) ? date('M d, Y', strtotime($app['applied_at'])) : 'N/A' ?></td>
                                                 <td>
                                                     <span class="badge 
-                                                        <?= $app['status'] === 'accepted' ? 'bg-success' : 
-                                                           ($app['status'] === 'rejected' ? 'bg-danger' : 'bg-warning') ?>">
-                                                        <?= ucfirst($app['status']) ?>
+                                                        <?= ($app['status'] ?? '') === 'accepted' ? 'bg-success' : 
+                                                           (($app['status'] ?? '') === 'rejected' ? 'bg-danger' : 'bg-warning') ?>">
+                                                        <?= ucfirst($app['status'] ?? 'pending') ?>
                                                     </span>
                                                 </td>
                                                 <td>
-                                                    <?php if ($app['status'] === 'pending'): ?>
+                                                    <?php if (($app['status'] ?? '') === 'pending'): ?>
                                                         <div class="btn-group btn-group-sm">
-                                                            <a href="recruiter_dashboard.php?action=accept&id=<?= $app['id'] ?>" 
+                                                            <a href="recruiter_dashboard.php?action=accept&id=<?= $app['id'] ?? '' ?>" 
                                                                class="btn btn-success" title="Accept">
                                                                 <i class="fas fa-check"></i>
                                                             </a>
-                                                            <a href="recruiter_dashboard.php?action=reject&id=<?= $app['id'] ?>" 
+                                                            <a href="recruiter_dashboard.php?action=reject&id=<?= $app['id'] ?? '' ?>" 
                                                                class="btn btn-danger" title="Reject">
                                                                 <i class="fas fa-times"></i>
                                                             </a>
@@ -252,18 +274,18 @@ $jobs = $jobs_stmt->get_result();
                                     <div class="col-md-6 mb-3">
                                         <div class="card h-100">
                                             <div class="card-body">
-                                                <h5><?= htmlspecialchars($job['title']) ?></h5>
+                                                <h5><?= htmlspecialchars($job['title'] ?? '') ?></h5>
                                                 <p class="small text-muted">
-                                                    <?= $job['application_count'] ?> application(s)
+                                                    <?= $job['application_count'] ?? 0 ?> application(s)
                                                     <span class="badge 
-                                                        <?= $job['status'] === 'approved' ? 'bg-success' : 
-                                                           ($job['status'] === 'rejected' ? 'bg-danger' : 'bg-warning') ?> ms-2">
-                                                        <?= ucfirst($job['status']) ?>
+                                                        <?= ($job['status'] ?? '') === 'approved' ? 'bg-success' : 
+                                                           (($job['status'] ?? '') === 'rejected' ? 'bg-danger' : 'bg-warning') ?> ms-2">
+                                                        <?= ucfirst($job['status'] ?? 'unknown') ?>
                                                     </span>
                                                 </p>
                                                 <div class="d-flex justify-content-between">
-                                                    <a href="job_details.php?id=<?= $job['id'] ?>" class="btn btn-sm btn-outline-primary">View</a>
-                                                    <a href="manage_job.php?id=<?= $job['id'] ?>" class="btn btn-sm btn-outline-secondary">Manage</a>
+                                                    <a href="job_details.php?id=<?= $job['id'] ?? '' ?>" class="btn btn-sm btn-outline-primary">View</a>
+                                                    <a href="manage_job.php?id=<?= $job['id'] ?? '' ?>" class="btn btn-sm btn-outline-secondary">Manage</a>
                                                 </div>
                                             </div>
                                         </div>

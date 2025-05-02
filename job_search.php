@@ -3,58 +3,6 @@ include "connexion/config.php";
 define('SECURE_ACCESS', true);
 session_start();
 
-// Handle job application
-if (isset($_POST['apply_job']) && isset($_SESSION['user_email']) && $_SESSION['user_type'] === 'candidat') {
-    $job_id = intval($_POST['job_id']);
-    $user_id = $_SESSION['user_id'];
-    
-    // Get recruiter_id for this job
-    $recruiter_stmt = $conn->prepare("SELECT recruiter_id FROM job WHERE id = ?");
-    $recruiter_stmt->bind_param("i", $job_id);
-    $recruiter_stmt->execute();
-    $recruiter_result = $recruiter_stmt->get_result();
-    
-    if ($recruiter_result->num_rows > 0) {
-        $job = $recruiter_result->fetch_assoc();
-        $recruiter_id = $job['recruiter_id'];
-        
-        // Check if already applied
-        $check_stmt = $conn->prepare("SELECT id FROM application WHERE user_id = ? AND job_id = ?");
-        $check_stmt->bind_param("ii", $user_id, $job_id);
-        $check_stmt->execute();
-        $check_result = $check_stmt->get_result();
-        
-        if ($check_result->num_rows == 0) {
-            // Insert application
-            $insert_stmt = $conn->prepare("INSERT INTO application (user_id, job_id, status) VALUES (?, ?, 'pending')");
-            $insert_stmt->bind_param("ii", $user_id, $job_id);
-            
-            if ($insert_stmt->execute()) {
-                $application_id = $conn->insert_id; // Get the last inserted ID
-                
-                // Create notification
-                $first_name = $_SESSION['first_name'] ?? 'A candidate';
-                $last_name = $_SESSION['last_name'] ?? '';
-                $message = "New application from " . $first_name . " " . $last_name;
-                
-                $notif_stmt = $conn->prepare("INSERT INTO notifications (recruiter_id, message, type, related_id) VALUES (?, ?, 'application', ?)");
-                $notif_stmt->bind_param("isi", $recruiter_id, $message, $application_id);
-                $notif_stmt->execute();
-                
-                $_SESSION['success_message'] = "Application submitted successfully!";
-            } else {
-                $_SESSION['error_message'] = "Failed to submit application";
-            }
-        } else {
-            $_SESSION['error_message'] = "You've already applied to this job";
-        }
-    }
-    
-    // Redirect back to avoid form resubmission
-    header("Location: job_search.php");
-    exit();
-}
-
 // Get company ID from URL if coming from company search
 $company_id = isset($_GET['company_id']) ? intval($_GET['company_id']) : 0;
 
@@ -181,79 +129,7 @@ $jobs = $stmt->get_result();
     <link rel="stylesheet" href="assets/icons/all.min.css" />
     <link rel="stylesheet" href="assets/CSS/style.css" />
     <link rel="icon" type="image/png" href="./assets/images/hamidou.png" width="8" />
-    <style>
-        .job-card {
-            border: none;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            height: 100%;
-        }
-        
-        .job-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 6px 16px rgba(0,0,0,0.1);
-        }
-        
-        .salary-badge {
-            background: rgba(40, 167, 69, 0.1);
-            color: #28a745;
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 0.9rem;
-        }
-        
-        .text-truncate-3 {
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        
-        .job-meta {
-            font-size: 0.85rem;
-            color: #6c757d;
-        }
 
-        .filter-card {
-            position: sticky;
-            top: 20px;
-        }
-
-        #salaryValue {
-            font-weight: 600;
-        }
-
-        .form-range::-webkit-slider-thumb {
-            background: #0d6efd;
-        }
-
-        .form-range::-moz-range-thumb {
-            background: #0d6efd;
-        }
-
-        .form-range::-ms-thumb {
-            background: #0d6efd;
-        }
-        
-        .company-filter-badge {
-            background-color: #e9f7fe;
-            color: #0d6efd;
-            padding: 8px 12px;
-            border-radius: 20px;
-            display: inline-flex;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-        
-        .company-filter-badge .close {
-            margin-left: 8px;
-            font-size: 1.2rem;
-            cursor: pointer;
-        }
-    </style>
 </head>
 
 <body>
@@ -385,9 +261,9 @@ $jobs = $stmt->get_result();
                                                         <?= ucfirst($status) ?>
                                                     </span>
                                                 <?php else: ?>
-                                                    <form method="post" action="job_search.php" style="display: inline;">
+                                                    <form action="apply_job.php" method="post"  style="display: inline;">
                                                         <input type="hidden" name="job_id" value="<?= $row['id'] ?>">
-                                                        <button type="submit" name="apply_job" class="btn btn-primary btn-sm">Apply Now</button>
+                                                        <button type="submit" name="appl    y_job" class="btn btn-primary btn-sm">Apply Now</button>
                                                     </form>
                                                 <?php endif; ?>
                                                 <?php $check_stmt->close(); ?>

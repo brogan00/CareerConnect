@@ -3,261 +3,287 @@ include "connexion/config.php";
 define('SECURE_ACCESS', true);
 session_start();
 
-// Redirect if not logged in as candidate
-if (!isset($_SESSION['user_email']) || $_SESSION['user_type'] !== 'candidat') {
-    header("Location: connexion/login.php");
+// Check if user is logged in
+if (!isset($_SESSION['user_email'])) {
+    header("Location: login.php");
     exit();
 }
 
-$user_id = $_SESSION['user_id'];
+// Get candidate ID from URL
+if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
+    header("Location: candidate_search.php");
+    exit();
+}
 
-// Get candidate applications with proper joins
-$stmt = $conn->prepare("
-    SELECT a.*, j.title AS job_title, c.name AS company_name, 
-           a.status AS application_status, r.id AS recruiter_id
-    FROM application a
-    JOIN job j ON a.job_id = j.id
-    JOIN recruiter r ON j.recruiter_id = r.id
-    JOIN company c ON r.company_id = c.id
-    WHERE a.user_id = ?
-    ORDER BY a.applied_at DESC
-");
-$stmt->bind_param("i", $user_id);
+$candidate_id = intval($_GET['id']);
+
+// Get candidate basic info
+$query = "SELECT * FROM users WHERE id = ? AND type = 'candidat'";
+$stmt = $conn->prepare($query);
+$stmt->bind_param("i", $candidate_id);
 $stmt->execute();
-$applications = $stmt->get_result();
+$result = $stmt->get_result();
+$candidate = $result->fetch_assoc();
+$stmt->close();
 
-// Get candidate profile
-$profile_stmt = $conn->prepare("SELECT * FROM users WHERE id = ?");
-$profile_stmt->bind_param("i", $user_id);
-$profile_stmt->execute();
-$profile_result = $profile_stmt->get_result();
-$profile = $profile_result->fetch_assoc();
-$profile_stmt->close();
+if (!$candidate) {
+    header("Location: candidate_search.php");
+    exit();
+}
 
-// Get notifications
-$notifications_stmt = $conn->prepare("
-    SELECT * FROM notifications 
-    WHERE user_id = ? 
-    ORDER BY created_at DESC
-    LIMIT 5
-");
-$notifications_stmt->bind_param("i", $user_id);
-$notifications_stmt->execute();
-$notifications = $notifications_stmt->get_result();
+// Get candidate education
+$education = [];
+$query = "SELECT * FROM education WHERE user_id = ? ORDER BY end_date DESC";
+$stmt = $conn->prepare($query);
+$stmt->bind_param("i", $candidate_id);
+$stmt->execute();
+$result = $stmt->get_result();
+while ($row = $result->fetch_assoc()) {
+    $education[] = $row;
+}
+$stmt->close();
 
-// Set default values
-$first_name = $profile['first_name'] ?? 'User';
-$last_name = $profile['last_name'] ?? '';
-$profile_picture = $profile['profile_picture'] ?? null;
+// Get candidate experience
+$experience = [];
+$query = "SELECT * FROM experience WHERE user_id = ? ORDER BY end_date DESC";
+$stmt = $conn->prepare($query);
+$stmt->bind_param("i", $candidate_id);
+$stmt->execute();
+$result = $stmt->get_result();
+while ($row = $result->fetch_assoc()) {
+    $experience[] = $row;
+}
+$stmt->close();
+
+// Get candidate skills
+$skills = [];
+$query = "SELECT * FROM skills WHERE user_id = ?";
+$stmt = $conn->prepare($query);
+$stmt->bind_param("i", $candidate_id);
+$stmt->execute();
+$result = $stmt->get_result();
+while ($row = $result->fetch_assoc()) {
+    $skills[] = $row['content'];
+}
+$stmt->close();
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Candidate Dashboard - CareerConnect</title>
-    <link rel="stylesheet" href="assets/CSS/bootstrap.min.css">
-    <link rel="stylesheet" href="assets/icons/all.min.css">
-    <link rel="stylesheet" href="assets/CSS/style.css">
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><?= htmlspecialchars($candidate['first_name'] . ' ' . $candidate['last_name']) ?> - CareerConnect</title>
+    <link rel="stylesheet" href="assets/CSS/bootstrap.min.css" />
+    <link rel="stylesheet" href="assets/CSS/style.css" />
+    <link rel="icon" type="image/png" href="./assets/images/hamidou.png" width="8" />
     <style>
-        .dashboard-card { border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .profile-picture { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; }
-        .notification-item { border-left: 3px solid #0d6efd; }
-        .notification-unread { background-color: #f8f9fa; }
+        .profile-header {
+            background: linear-gradient(135deg, #3a0ca3 0%, #480ca8 100%);
+            color: white;
+            border-radius: 10px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .profile-picture {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 5px solid white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            color: #3a0ca3;
+            font-weight: bold;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .skill-badge {
+            background-color: #e0e0e0;
+            color: #333;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            display: inline-block;
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-left: 30px;
+            margin-bottom: 25px;
+        }
+
+        .timeline-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 5px;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background-color: #3a0ca3;
+        }
+
+        .timeline-item::after {
+            content: '';
+            position: absolute;
+            left: 7px;
+            top: 25px;
+            width: 1px;
+            height: calc(100% - 20px);
+            background-color: #ddd;
+        }
+
+        .timeline-item:last-child::after {
+            display: none;
+        }
+
+        .btn-primary {
+            background: #3a0ca3;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 25px;
+        }
+
+        .btn-primary:hover {
+            background: #480ca8;
+        }
+
+        .btn-outline-primary {
+            color: #3a0ca3;
+            border-color: #3a0ca3;
+            border-radius: 8px;
+            padding: 10px 25px;
+        }
+
+        .btn-outline-primary:hover {
+            background: #3a0ca3;
+            color: white;
+        }
     </style>
 </head>
+
 <body>
+    <!-- Navbar -->
     <?php include "templates/header.php" ?>
 
-    <div class="container py-5">
-        <div class="row">
-            <!-- Sidebar -->
-            <div class="col-md-3 mb-4">
-                <div class="card dashboard-card">
-                    <div class="card-body text-center">
-                        <?php if ($profile_picture): ?>
-                            <img src="<?= htmlspecialchars($profile_picture) ?>" class="profile-picture mb-3" alt="Profile">
-                        <?php else: ?>
-                            <div class="profile-picture mb-3 mx-auto bg-light d-flex align-items-center justify-content-center">
-                                <i class="fas fa-user fa-3x text-muted"></i>
-                            </div>
-                        <?php endif; ?>
-                        <h4><?= htmlspecialchars("$first_name $last_name") ?></h4>
-                        <p class="text-muted">Candidate</p>
-                        <hr>
-                        <ul class="nav nav-pills flex-column">
-                            <li class="nav-item"><a class="nav-link active" href="candidate_dashboard.php"><i class="fas fa-tachometer-alt me-2"></i> Dashboard</a></li>
-                            <li class="nav-item"><a class="nav-link" href="edit_profile.php"><i class="fas fa-user-edit me-2"></i> Edit Profile</a></li>
-                            <li class="nav-item"><a class="nav-link" href="my_applications.php"><i class="fas fa-file-alt me-2"></i> My Applications</a></li>
-                            <li class="nav-item"><a class="nav-link" href="connexion/logout.php"><i class="fas fa-sign-out-alt me-2"></i> Logout</a></li>
-                        </ul>
-                    </div>
-                </div>
+    <!-- Main Content -->
+    <div class="container my-5">
+        <!-- Profile Header -->
+        <div class="profile-header text-center">
+            <img src="<?= !empty($candidate['profile_picture']) ? htmlspecialchars($candidate['profile_picture']) : 'assets/icons/default-profile.png' ?>" 
+                 alt="Profile Picture" class="profile-picture mb-3">
+            <h1><?= htmlspecialchars($candidate['first_name'] . ' ' . $candidate['last_name']) ?></h1>
+            <p class="lead mb-4">
+                <?= !empty($education[0]['speciality']) ? htmlspecialchars($education[0]['speciality']) : 'No specialty specified' ?>
+            </p>
+            <p class="mb-4">
+                <i class="bi bi-geo-alt-fill"></i> <?= htmlspecialchars($candidate['address']) ?> | 
+                <i class="bi bi-envelope-fill"></i> <?= htmlspecialchars($candidate['email']) ?> | 
+                <i class="bi bi-phone-fill"></i> <?= htmlspecialchars($candidate['phone']) ?>
+            </p>
+            <div>
+                <a href="<?= htmlspecialchars($candidate['cv']) ?>" class="btn btn-primary" download>
+                    <i class="bi bi-download"></i> Download CV
+                </a>
+                <a href="candidate_search.php" class="btn btn-outline-primary">
+                    <i class="bi bi-arrow-left"></i> Back to Search
+                </a>
+            </div>
+        </div>
 
-                <!-- Notifications -->
-                <div class="card dashboard-card mt-4">
-                    <div class="card-header"><h6>Recent Notifications</h6></div>
-                    <div class="card-body p-0">
-                        <?php if ($notifications->num_rows > 0): ?>
-                            <?php while ($notification = $notifications->fetch_assoc()): ?>
-                                <div class="list-group-item notification-item <?= $notification['is_read'] ? '' : 'notification-unread' ?>">
-                                    <small class="text-muted"><?= date('M d, H:i', strtotime($notification['created_at'])) ?></small>
-                                    <p class="mb-0 small"><?= htmlspecialchars($notification['message']) ?></p>
-                                </div>
-                            <?php endwhile; ?>
-                        <?php else: ?>
-                            <div class="text-center p-3"><p class="text-muted small">No notifications</p></div>
-                        <?php endif; ?>
-                    </div>
+        <!-- About Section -->
+        <div class="section-card">
+            <h2 class="section-title">About</h2>
+            <p><?= !empty($candidate['about']) ? nl2br(htmlspecialchars($candidate['about'])) : 'No information provided.' ?></p>
+        </div>
+
+        <!-- Skills Section -->
+        <?php if (!empty($skills)): ?>
+            <div class="section-card">
+                <h2 class="section-title">Skills</h2>
+                <div>
+                    <?php foreach ($skills as $skill): ?>
+                        <span class="skill-badge"><?= htmlspecialchars($skill) ?></span>
+                    <?php endforeach; ?>
                 </div>
             </div>
+        <?php endif; ?>
 
-            <!-- Main Content -->
-            <div class="col-md-9">
-                <div class="card dashboard-card mb-4">
-                    <div class="card-header">
-                        <h4>Dashboard Overview</h4>
-                    </div>
-                    <div class="card-body">
-                        <!-- Stats -->
-                        <div class="row mb-4">
-                            <div class="col-md-4">
-                                <div class="card border-start border-primary">
-                                    <div class="card-body">
-                                        <h6 class="text-muted">Total Applications</h6>
-                                        <h3><?= $applications->num_rows ?></h3>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="card border-start border-warning">
-                                    <div class="card-body">
-                                        <h6 class="text-muted">Pending</h6>
-                                        <?php
-                                        $pending = 0;
-                                        $applications->data_seek(0);
-                                        while ($app = $applications->fetch_assoc()) {
-                                            if ($app['application_status'] == 'pending') $pending++;
-                                        }
-                                        ?>
-                                        <h3><?= $pending ?></h3>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="card border-start border-success">
-                                    <div class="card-body">
-                                        <h6 class="text-muted">Accepted</h6>
-                                        <?php
-                                        $accepted = 0;
-                                        $applications->data_seek(0);
-                                        while ($app = $applications->fetch_assoc()) {
-                                            if ($app['application_status'] == 'accepted') $accepted++;
-                                        }
-                                        ?>
-                                        <h3><?= $accepted ?></h3>
-                                    </div>
-                                </div>
-                            </div>
+        <!-- Experience Section -->
+        <?php if (!empty($experience)): ?>
+            <div class="section-card">
+                <h2 class="section-title">Work Experience</h2>
+                <div class="timeline">
+                    <?php foreach ($experience as $exp): ?>
+                        <div class="timeline-item">
+                            <h4><?= htmlspecialchars($exp['job_name']) ?></h4>
+                            <h5><?= htmlspecialchars($exp['company_name']) ?></h5>
+                            <p class="text-muted">
+                                <?= date('M Y', strtotime($exp['start_date'])) ?> - 
+                                <?= !empty($exp['end_date']) ? date('M Y', strtotime($exp['end_date'])) : 'Present' ?>
+                            </p>
+                            <?php if (!empty($exp['description'])): ?>
+                                <p><?= nl2br(htmlspecialchars($exp['description'])) ?></p>
+                            <?php endif; ?>
                         </div>
-
-                        <!-- Applications -->
-                        <h5>Recent Applications</h5>
-                        <?php if ($applications->num_rows > 0): ?>
-                            <div class="table-responsive">
-                                <table class="table">
-                                    <thead>
-                                        <tr>
-                                            <th>Job Title</th>
-                                            <th>Company</th>
-                                            <th>Applied Date</th>
-                                            <th>Status</th>
-                                            <th>Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php $applications->data_seek(0); ?>
-                                        <?php while ($app = $applications->fetch_assoc()): ?>
-                                            <tr>
-                                                <td><?= htmlspecialchars($app['job_title']) ?></td>
-                                                <td><?= htmlspecialchars($app['company_name']) ?></td>
-                                                <td><?= date('M d, Y', strtotime($app['applied_at'])) ?></td>
-                                                <td>
-                                                    <span class="badge 
-                                                        <?= $app['application_status'] === 'accepted' ? 'bg-success' : 
-                                                           ($app['application_status'] === 'rejected' ? 'bg-danger' : 'bg-warning') ?>">
-                                                        <?= ucfirst($app['application_status']) ?>
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <a href="job_details.php?id=<?= $app['job_id'] ?>" class="btn btn-sm btn-outline-primary">View</a>
-                                                </td>
-                                            </tr>
-                                        <?php endwhile; ?>
-                                    </tbody>
-                                </table>
-                            </div>
-                        <?php else: ?>
-                            <div class="alert alert-info">No applications yet. <a href="job_search.php">Browse jobs</a></div>
-                        <?php endif; ?>
-                    </div>
-                </div>
-
-                <!-- Recommended Jobs -->
-                <div class="card dashboard-card">
-                    <div class="card-header"><h5>Recommended Jobs</h5></div>
-                    <div class="card-body">
-                        <?php
-                        // Safely get recommended jobs
-                        $query = "
-                            SELECT j.*, c.name AS company_name 
-                            FROM job j
-                            JOIN recruiter r ON j.recruiter_id = r.id
-                            JOIN company c ON r.company_id = c.id
-                            WHERE j.status = 'approved'
-                        ";
-                        
-                        if ($user_id > 0) {
-                            $query .= " AND j.id NOT IN (
-                                SELECT job_id FROM application WHERE user_id = $user_id
-                            )";
-                        }
-                        
-                        $query .= " ORDER BY j.created_at DESC LIMIT 3";
-                        $recommended_jobs = $conn->query($query);
-                        
-                        if ($recommended_jobs && $recommended_jobs->num_rows > 0): ?>
-                            <div class="row">
-                                <?php while ($job = $recommended_jobs->fetch_assoc()): ?>
-                                    <div class="col-md-4 mb-3">
-                                        <div class="card h-100">
-                                            <div class="card-body">
-                                                <h6><?= htmlspecialchars($job['title']) ?></h6>
-                                                <p class="small text-muted"><?= htmlspecialchars($job['company_name']) ?></p>
-                                                <p class="small"><?= htmlspecialchars($job['mission']) ?></p>
-                                                <div class="d-flex justify-content-between">
-                                                    <span class="badge bg-primary"><?= htmlspecialchars($job['type_contract']) ?></span>
-                                                    <div>
-                                                        <a href="job_details.php?id=<?= $job['id'] ?>" class="btn btn-sm btn-outline-primary">View</a>
-                                                        <a href="apply_job.php?job_id=<?= $job['id'] ?>" class="btn btn-sm btn-primary">Apply</a>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                <?php endwhile; ?>
-                            </div>
-                        <?php else: ?>
-                            <div class="alert alert-info">No recommended jobs found</div>
-                        <?php endif; ?>
-                    </div>
+                    <?php endforeach; ?>
                 </div>
             </div>
+        <?php endif; ?>
+
+        <!-- Education Section -->
+        <?php if (!empty($education)): ?>
+            <div class="section-card">
+                <h2 class="section-title">Education</h2>
+                <div class="timeline">
+                    <?php foreach ($education as $edu): ?>
+                        <div class="timeline-item">
+                            <h4><?= htmlspecialchars($edu['level']) ?> in <?= htmlspecialchars($edu['speciality']) ?></h4>
+                            <h5><?= htmlspecialchars($edu['univ_name']) ?></h5>
+                            <p class="text-muted">
+                                <?= date('M Y', strtotime($edu['start_date'])) ?> - 
+                                <?= !empty($edu['end_date']) ? date('M Y', strtotime($edu['end_date'])) : 'Present' ?>
+                            </p>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        <?php endif; ?>
+
+        <!-- Contact Button -->
+        <div class="text-center mt-4">
+            <a href="mailto:<?= htmlspecialchars($candidate['email']) ?>" class="btn btn-primary btn-lg">
+                <i class="bi bi-envelope-fill"></i> Contact Candidate
+            </a>
         </div>
     </div>
 
+    <!-- Footer -->
     <?php include "templates/footer.php" ?>
-    <script src="assets/JS/bootstrap.bundle.min.js"></script>
+
+    <script src="assets/JS/bootstrap.min.js"></script>
+    <script src="assets/JS/jquery-3.7.1.js"></script>
 </body>
 </html>

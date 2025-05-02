@@ -2,15 +2,21 @@
 include "connexion/config.php";
 session_start();
 
-if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'candidat') {
+if (!isset($_SESSION['user_email']) || $_SESSION['user_type'] !== 'candidat') {
     header("Location: login.php");
     exit();
 }
 
-if (isset($_GET['id'])) {
-    $job_id = intval($_GET['id']);
-    $user_id = $_SESSION['user_id'];
-    
+if (isset($_POST['job_id'])) {
+    $job_id = intval($_POST['job_id']);
+
+    $user_id_query = $conn->prepare("SELECT id FROM users WHERE email = ?");
+    $user_id_query->bind_param("s", $_SESSION['user_email']);
+    $user_id_query->execute();
+    $result = $user_id_query->get_result();
+    $user_data = $result->fetch_assoc();
+    $user_id = $user_data['id'];
+
     // Check if already applied
     $check = $conn->prepare("SELECT id FROM application WHERE user_id = ? AND job_id = ?");
     $check->bind_param("ii", $user_id, $job_id);
@@ -18,6 +24,7 @@ if (isset($_GET['id'])) {
     $check->store_result();
     
     if ($check->num_rows == 0) {
+
         // Insert application
         $stmt = $conn->prepare("INSERT INTO application (status, user_id, job_id) VALUES ('pending', ?, ?)");
         $stmt->bind_param("ii", $user_id, $job_id);
@@ -30,6 +37,7 @@ if (isset($_GET['id'])) {
             $result = $recruiter_query->get_result();
             $job_data = $result->fetch_assoc();
             $recruiter_id = $job_data['recruiter_id'];
+         
             
             // Get candidate name
             $candidate_query = $conn->prepare("SELECT first_name, last_name FROM users WHERE id = ?");
@@ -41,19 +49,19 @@ if (isset($_GET['id'])) {
             
             // Create notification
             $message = "New application from " . $candidate_name;
-            $notif = $conn->prepare("INSERT INTO notifications (recruiter_id, message, type, related_id, created_at) VALUES (?, ?, 'cv_submission', ?, NOW())");
-            $notif->bind_param("isi", $recruiter_id, $message, $job_id);
+            $notif = $conn->prepare("INSERT INTO notifications (recruiter_id,user_id, message, type, related_id, created_at) VALUES (?, ?,?, 'cv_submission', ?, NOW())");
+            $notif->bind_param("iisi", $recruiter_id,$user_id, $message, $job_id);
             $notif->execute();
             
-            $_SESSION['success'] = "Application submitted successfully!";
+            $_SESSION['success_message'] = "Application submitted successfully!";
         } else {
-            $_SESSION['error'] = "Error submitting application.";
+            $_SESSION['error_message'] = "Error submitting application.";
         }
     } else {
-        $_SESSION['error'] = "You've already applied to this job.";
+        $_SESSION['error_message'] = "You've already applied to this job.";
     }
     
-    header("Location: job_details.php?id=" . $job_id);
+    header("Location: job_search.php");
     exit();
 }
 ?>

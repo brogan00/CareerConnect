@@ -421,3 +421,74 @@ body {
   border-color: #86b7fe;
   box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
 }
+.job-card {
+  border: none;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  height: 100%;
+}
+
+.job-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+}
+
+.salary-badge {
+  background: rgba(40, 167, 69, 0.1);
+  color: #28a745;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.text-truncate-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.job-meta {
+  font-size: 0.85rem;
+  color: #6c757d;
+}
+
+.filter-card {
+  position: sticky;
+  top: 20px;
+}
+
+#salaryValue {
+  font-weight: 600;
+}
+
+.form-range::-webkit-slider-thumb {
+  background: #0d6efd;
+}
+
+.form-range::-moz-range-thumb {
+  background: #0d6efd;
+}
+
+.form-range::-ms-thumb {
+  background: #0d6efd;
+}
+
+.company-filter-badge {
+  background-color: #e9f7fe;
+  color: #0d6efd;
+  padding: 8px 12px;
+  border-radius: 20px;
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.company-filter-badge .close {
+  margin-left: 8px;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
