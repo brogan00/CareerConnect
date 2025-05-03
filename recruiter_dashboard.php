@@ -25,11 +25,13 @@ if (isset($_GET['action']) && isset($_GET['id'])) {
     if ($recruiter_id_result->num_rows > 0) {
         $recruiter_id = $recruiter_id_result->fetch_assoc()['id'];
         
-        // Verify application belongs to this recruiter
+        // Verify application belongs to this recruiter and get candidate details
         $verify_stmt = $conn->prepare("
-            SELECT a.id, a.user_id, j.title 
+            SELECT a.id, a.user_id, j.title, u.email AS candidate_email, 
+                   u.first_name AS candidate_first_name, u.last_name AS candidate_last_name
             FROM application a 
             JOIN job j ON a.job_id = j.id 
+            JOIN users u ON a.user_id = u.id
             WHERE a.id = ? AND j.recruiter_id = ?
         ");
         $verify_stmt->bind_param("ii", $application_id, $recruiter_id);
@@ -52,8 +54,70 @@ if (isset($_GET['action']) && isset($_GET['id'])) {
                 VALUES (?, ?, 'application', ?)
             ");
             $notif_type = ($action === 'accept') ? 'cv_approval' : 'cv_rejection';
-            $notif_stmt->bind_param("isi", $app_data['user_id'], $message, $notif_type, $application_id);
+            $notif_stmt->bind_param("isi", $app_data['user_id'], $message,  $application_id);
             $notif_stmt->execute();
+            
+            // Send email if accepted
+            if ($action === 'accept') {
+                $to = $app_data['candidate_email'];
+                $subject = "Congratulations! Your application has been accepted";
+                
+                // HTML email content
+                $message_body = "
+                    <html>
+                    <head>
+                        <title>Application Accepted</title>
+                        <style>
+                            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                            .header { background-color: #4f46e5; color: white; padding: 20px; text-align: center; }
+                            .content { padding: 20px; background-color: #f9fafb; }
+                            .footer { margin-top: 20px; font-size: 0.9em; color: #666; }
+                            .button { 
+                                display: inline-block; 
+                                background-color: #4f46e5; 
+                                color: white; 
+                                padding: 10px 20px; 
+                                text-decoration: none; 
+                                border-radius: 5px; 
+                                margin: 15px 0;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class='container'>
+                            <div class='header'>
+                                <h1>Application Accepted!</h1>
+                            </div>
+                            <div class='content'>
+                                <p>Dear {$app_data['candidate_first_name']},</p>
+                                <p>We are pleased to inform you that your application for the position of <strong>{$app_data['title']}</strong> has been accepted!</p>
+                                <p>Our team will contact you shortly to discuss the next steps in the hiring process.</p>
+                                
+                                <p>You can view your application status by logging into your account:</p>
+                                <a href='http://yourwebsite.com/login.php' class='button'>Login to Your Account</a>
+                                
+                                <p>If you have any questions, please don't hesitate to contact us.</p>
+                            </div>
+                            <div class='footer'>
+                                <p>Best regards,<br>
+                                {$recruiter_profile['first_name']} {$recruiter_profile['last_name']}<br>
+                                {$recruiter_profile['company_name']}</p>
+                            </div>
+                        </div>
+                    </body>
+                    </html>
+                ";
+                
+                // Email headers
+                $headers = "MIME-Version: 1.0" . "\r\n";
+                $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+                $headers .= "From: {$recruiter_profile['email']}" . "\r\n";
+                $headers .= "Reply-To: {$recruiter_profile['email']}" . "\r\n";
+                
+                // Send the email
+                mail($to, $subject, $message_body, $headers);
+            }
             
             $_SESSION['success_message'] = "Application $status successfully!";
         } else {
@@ -88,10 +152,10 @@ if (!$recruiter_profile) {
 
 $recruiter_id = $recruiter_profile['id'];
 
-// Get applications for recruiter's jobs - FIXED THIS QUERY
+// Get applications for recruiter's jobs
 $applications_stmt = $conn->prepare("
     SELECT a.*, j.title AS job_title, 
-           u.first_name, u.last_name, u.email, u.profile_picture,
+           u.first_name, u.last_name, u.email, u.profile_picture, u.id as user_id,
            c.name AS company_name
     FROM application a
     JOIN job j ON a.job_id = j.id
@@ -132,6 +196,9 @@ $jobs = $jobs_stmt->get_result();
         .dashboard-card { border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
         .candidate-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
         .profile-container { width: 80px; height: 80px; border-radius: 50%; overflow: hidden; }
+        .badge-pending { background-color: #f39c12; }
+        .badge-accepted { background-color: #2ecc71; }
+        .badge-rejected { background-color: #e74c3c; }
     </style>
 </head>
 <body>
@@ -227,14 +294,14 @@ $jobs = $jobs_stmt->get_result();
                                                 <td><?= !empty($app['applied_at']) ? date('M d, Y', strtotime($app['applied_at'])) : 'N/A' ?></td>
                                                 <td>
                                                     <span class="badge 
-                                                        <?= ($app['status'] ?? '') === 'accepted' ? 'bg-success' : 
-                                                           (($app['status'] ?? '') === 'rejected' ? 'bg-danger' : 'bg-warning') ?>">
+                                                        <?= ($app['status'] ?? '') === 'accepted' ? 'badge-accepted' : 
+                                                           (($app['status'] ?? '') === 'rejected' ? 'badge-rejected' : 'badge-pending') ?>">
                                                         <?= ucfirst($app['status'] ?? 'pending') ?>
                                                     </span>
                                                 </td>
                                                 <td>
-                                                    <?php if (($app['status'] ?? '') === 'pending'): ?>
-                                                        <div class="btn-group btn-group-sm">
+                                                    <div class="btn-group btn-group-sm">
+                                                        <?php if (($app['status'] ?? '') === 'pending'): ?>
                                                             <a href="recruiter_dashboard.php?action=accept&id=<?= $app['id'] ?? '' ?>" 
                                                                class="btn btn-success" title="Accept">
                                                                 <i class="fas fa-check"></i>
@@ -243,10 +310,12 @@ $jobs = $jobs_stmt->get_result();
                                                                class="btn btn-danger" title="Reject">
                                                                 <i class="fas fa-times"></i>
                                                             </a>
-                                                        </div>
-                                                    <?php else: ?>
-                                                        <span class="text-muted small">Action taken</span>
-                                                    <?php endif; ?>
+                                                        <?php endif; ?>
+                                                        <a href="candidate_profile.php?id=<?= $app['user_id'] ?? '' ?>" 
+                                                           class="btn btn-info" title="View Profile">
+                                                            <i class="fas fa-eye"></i>
+                                                        </a>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         <?php endwhile; ?>
@@ -311,6 +380,15 @@ $jobs = $jobs_stmt->get_result();
         document.querySelectorAll('.btn-danger').forEach(btn => {
             btn.addEventListener('click', function(e) {
                 if (!confirm('Are you sure you want to reject this application?')) {
+                    e.preventDefault();
+                }
+            });
+        });
+        
+        // Confirm before accepting
+        document.querySelectorAll('.btn-success').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                if (!confirm('Are you sure you want to accept this application? An email will be sent to the candidate.')) {
                     e.preventDefault();
                 }
             });
