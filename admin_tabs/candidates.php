@@ -168,7 +168,7 @@ if (isset($_SESSION['error'])) {
                                 <!-- View Details Button -->
                                 <button class="btn btn-sm btn-info view-details" 
                                         data-id="<?= $candidate['id'] ?>"
-                                        data-bs-toggle="modal" data-bs-target="#candidateDetailsModal"
+                                        data-bs-toggle="modal" data-bs-target="#candiddate_profile"
                                         data-bs-toggle="tooltip" title="View Details">
                                     <i class="fas fa-eye"></i>
                                 </button>

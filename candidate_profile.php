@@ -512,7 +512,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_review'])) {
                 <a href="<?= htmlspecialchars($candidate['cv']) ?>" class="btn btn-primary" download>
                     <i class="bi bi-download"></i> Download CV
                 </a>
-                <a href="candidate_search.php" class="btn btn-outline-light">
+                <a href="c  areer_resources.php" class="btn btn-outline-light">
                     <i class="bi bi-arrow-left"></i> Back to Search
                 </a>
             </div>
